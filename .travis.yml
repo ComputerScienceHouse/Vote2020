@@ -3,6 +3,6 @@ node_js:
   - "12"
 
 script:
-  - cd client && npm run lint
+  - npm run lint
   - cd client && npm run build
   - cd client && npm test
