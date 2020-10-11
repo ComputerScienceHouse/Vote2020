@@ -16,7 +16,7 @@ const PollList : React.FunctionComponent<PollListProps> = (props, { children }) 
                     {currentPolls.map(currentPoll => (
                         <li key={currentPoll.name}>
                             {currentPoll.name} 
-                            <button className="poll-list-join-button">Join Vote</button>
+                            <button className="btn btn-primary poll-list-button">Join Vote</button>
                             <hr />
                         </li>
                     ))}

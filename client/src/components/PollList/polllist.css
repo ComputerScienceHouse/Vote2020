@@ -27,19 +27,8 @@
     border-radius: 3px;
 }
 
-.poll-list-join-button {
+.poll-list-button {
     margin-left: 24px;
-    background-color: #b0197e;
-    border: none;
-    color: white;
-    padding: 4px 8px;
-    border-radius: 3px;
-    text-align: center;
-    text-decoration: none;
-    display: inline-block;
-    font-size: 14px;
-}
-
-.poll-list-join-button:hover {
-    background-color: #95156b;
+    font-size: 12px;
+    padding:4px 8px;
 }
