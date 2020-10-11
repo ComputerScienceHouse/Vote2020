@@ -1,0 +1,34 @@
+.poll-list-title-panel {
+    color: inherit;
+    font-size: 20px;
+    padding: 20px;
+}
+
+.poll-list {
+    border: none;
+    border-radius: 2px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.3);
+}
+
+.poll-list-items{
+    background-color: white;
+    font-size: 14px;
+    padding:12px;
+}
+
+.poll-list-items li {
+    list-style: none;
+    padding-top: 12px;
+}
+.poll-list-no-votes {
+    background-color: #2196f3;
+    color: white;
+    padding: 12px;
+    border-radius: 3px;
+}
+
+.poll-list-button {
+    margin-left: 24px;
+    font-size: 12px;
+    padding:4px 8px;
+}
