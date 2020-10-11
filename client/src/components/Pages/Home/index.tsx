@@ -1,4 +1,6 @@
 import React, {Component} from "react";
+import Spinner from "../../Spinner";
+import PollList from "../../PollList";
 
 type HomeProps = {};
 type HomeState = {
@@ -33,25 +35,15 @@ class Home extends Component<HomeProps, HomeState>{
   }
   render() {
     const {error, isLoaded, currentPolls} = this.state;
-    // const title = () =>( <div>Welcome to CSH Vote!</div>);
-
     if (error) {
       return(
       <div>Something went wrong! Please Try again</div>
       );
     } else if(!isLoaded) {
-      return(<div>Loading...</div>)
+      return(<Spinner className="home"/>)
     }else {
       return(
-      <div>
-      <ul>
-      {currentPolls.map(currentPoll => (
-        <li key={currentPoll.name}>
-          {currentPoll.name}
-        </li>
-      ))}
-    </ul>
-    </div>
+      <PollList currentPolls={currentPolls}/>
       )}
   }
 }

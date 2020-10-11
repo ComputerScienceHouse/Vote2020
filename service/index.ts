@@ -7,7 +7,9 @@ const app = express();
 
 app.use(cors());
 
-let currentPolls = [{"id": 1, "name": "eat a whole cake conditional", "voteOptions": ["eat 1 cake","eat 2 cakes", "eat no cakes : ("]}];
+let currentPolls = [{"id": 1, "name": "eat a whole cake conditional", "voteOptions": ["eat 1 cake","eat 2 cakes", "eat no cakes : ("]},
+{"id": 2, "name": "fail chad", "voteOptions": ["fail", "conditional", "abstain"]}
+];
 
 app.use(express.static(path.join(__dirname, "/../build")));
 
