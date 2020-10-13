@@ -14,12 +14,14 @@
     background-color: white;
     font-size: 14px;
     padding:12px;
+    padding-right: 16px;
 }
 
 .poll-list-items li {
     list-style: none;
     padding-top: 12px;
 }
+
 .poll-list-no-votes {
     background-color: #2196f3;
     color: white;
@@ -28,7 +30,9 @@
 }
 
 .poll-list-button {
-    margin-left: 24px;
     font-size: 12px;
-    padding:4px 8px;
+    padding: 8px 8px;
+    float: right;
+    position: relative;
+    transform: translateY(-25%);
 }
