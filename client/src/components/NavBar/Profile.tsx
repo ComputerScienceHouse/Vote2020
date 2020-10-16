@@ -11,7 +11,7 @@ const Profile: React.FunctionComponent = () => {
   const { oidcUser, logout } = useReactOidc();
 
   if (!oidcUser) return null;
-
+  console.log(oidcUser);
   const {
     profile: { name, preferred_username },
   } = oidcUser;

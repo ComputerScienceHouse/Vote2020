@@ -5,6 +5,7 @@ import * as cors from "cors";
 const app = express();
 
 app.use(cors());
+app.use(express.json());
 
 let currentPolls = [{"id": 1, "name": "eat a whole cake conditional", "voteOptions": ["eat 1 cake","eat 2 cakes", "eat no cakes : ("]},
 {"id": 2, "name": "fail chad", "voteOptions": ["fail", "conditional", "abstain"]}
@@ -15,6 +16,11 @@ app.use(express.static(path.join(__dirname, "/../build")));
 // Returns list of all current polls
 app.get("/api/getCurrentPolls", (req,res) => {
     res.json(currentPolls);
+});
+
+app.post("/api/getPollDetails", (req,res) => {
+    console.log(req.body);
+    res.json(req.body);
 });
 
 // Send in a client's vote, called from any voting screen
