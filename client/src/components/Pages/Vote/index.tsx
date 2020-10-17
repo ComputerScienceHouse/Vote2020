@@ -46,7 +46,7 @@ export const Vote: React.FunctionComponent = () =>{
           setError(true);
           console.log(error);
         });
-  }, [])
+  }, [voteId])
 
       function buttonClick(idx:number|null) {
         if (idx !== null) {
