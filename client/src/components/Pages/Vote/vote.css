@@ -1,0 +1,43 @@
+.poll-name-title-panel {
+    color: inherit;
+    font-size: 20px;
+    padding: 20px;
+}
+
+.poll-option-list {
+    border: none;
+    border-radius: 2px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.3);
+}
+
+.poll-options-items{
+    background-color: white;
+    font-size: 14px;
+    padding:12px;
+    padding-right: 16px;
+}
+
+.poll-options-items li {
+    list-style: none;
+    padding-top: 12px;
+}
+
+.poll-list-button {
+    font-size: 12px;
+    padding: 8px 8px;
+}
+
+.option-selected-box {
+    margin-top: 24px;
+    text-align: center;
+}
+
+.option-selected-text {
+    font-size: 24px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+}
+
+.submit-button {
+    font-size: 14px;
+}
