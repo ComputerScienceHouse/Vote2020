@@ -19,12 +19,16 @@ app.get("/api/getCurrentPolls", (req,res) => {
 });
 
 app.post("/api/getPollDetails", (req,res) => {
-    console.log(req.body);
-    res.json(req.body);
+    const poll = currentPolls.find(x => x.id === parseInt(req.body.voteId));
+    if (poll) {
+        res.json(poll)
+    } else {
+        res.status(404).send();
+    }
 });
 
 // Send in a client's vote, called from any voting screen
-app.get("/api/sendVote", (req,res) => {
+app.post("/api/sendVote", (req,res) => {
     res.status(204).send();
 });
 
