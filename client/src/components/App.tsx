@@ -11,7 +11,11 @@ class App extends Component {
         <PageContainer>
           <Switch>
             <Route exact path="/" component={withOidcSecure(Home)} />
-            <Route exact path="/vote/:voteId" component={withOidcSecure(Vote)} />
+            <Route
+              exact
+              path="/vote/:voteId"
+              component={withOidcSecure(Vote)}
+            />
           </Switch>
         </PageContainer>
       </Router>
