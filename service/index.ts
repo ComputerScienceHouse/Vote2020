@@ -5,6 +5,7 @@ import * as cors from "cors";
 const app = express();
 
 app.use(cors());
+app.use(express.json());
 
 let currentPolls = [{"id": 1, "name": "eat a whole cake conditional", "voteOptions": ["eat 1 cake","eat 2 cakes", "eat no cakes : ("]},
 {"id": 2, "name": "fail chad", "voteOptions": ["fail", "conditional", "abstain"]}
@@ -17,8 +18,17 @@ app.get("/api/getCurrentPolls", (req,res) => {
     res.json(currentPolls);
 });
 
+app.post("/api/getPollDetails", (req,res) => {
+    const poll = currentPolls.find(x => x.id === parseInt(req.body.voteId));
+    if (poll) {
+        res.json(poll)
+    } else {
+        res.status(404).send();
+    }
+});
+
 // Send in a client's vote, called from any voting screen
-app.get("/api/sendVote", (req,res) => {
+app.post("/api/sendVote", (req,res) => {
     res.status(204).send();
 });
 

@@ -1,6 +1,8 @@
 import React from "react";
 import "./polllist.css";
-
+import {
+    Link
+  } from "react-router-dom";
 type PollListProps = {
     currentPolls: Array<any>
 };
@@ -16,7 +18,9 @@ const PollList : React.FunctionComponent<PollListProps> = (props, { children }) 
                     {currentPolls.map(currentPoll => (
                         <li key={currentPoll.name}>
                             {currentPoll.name} 
-                            <button className="btn btn-primary poll-list-button">Join Vote</button>
+                            <Link to={`/vote/${currentPoll.id}`}>
+                                <button className="btn btn-primary poll-list-button">Join Vote</button>
+                            </Link>
                             <hr />
                         </li>
                     ))}
