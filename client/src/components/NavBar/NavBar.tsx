@@ -17,6 +17,8 @@ const NavBar: React.FunctionComponent = () => {
     setIsOpen(!isOpen);
   };
 
+  const isEvals = true;
+
   return (
     <div>
       <Navbar color="primary" dark expand="lg" fixed="top">
@@ -32,6 +34,13 @@ const NavBar: React.FunctionComponent = () => {
                   Home
                 </NavLink>
               </NavItem>
+              {isEvals ? 
+                <NavItem>
+                <NavLink to="/create" className={"nav-link"}>
+                  Create
+                </NavLink>
+              </NavItem>
+              : null}
             </Nav>
             <Nav navbar className="ml-auto">
               <Profile />
