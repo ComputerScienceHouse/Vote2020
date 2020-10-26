@@ -16,27 +16,32 @@ RUN rm /bin/sh \
     && apt-get -y autoclean
 
 # NVM and node install
-ENV NODE_VERSION 12
 COPY .nvmrc ./
 
 ENV NVM_DIR /usr/local/nvm
 RUN mkdir $NVM_DIR \
-    && curl --silent -o- https://raw.githubusercontent.com/creationix/nvm/v0.36.0/install.sh | bash
+    && curl --silent -o- https://raw.githubusercontent.com/creationix/nvm/v0.36.0/install.sh | bash 
 
-RUN source $NVM_DIR/nvm.sh \
-    && nvm install $NODE_VERSION \ 
-    && nvm alias default $NODE_VERSION \
-    && nvm use default
+RUN source $NVM_DIR/nvm.sh; \
+    nvm install \
+    && nvm use \
+    && echo "echo export PATH=\$PATH:\$(nvm which --silent | sed -s "s/\/[a-z]\+$//")" > path.sh
 
-ENV NODE_PATH $NVM_DIR/v$NODE_VERSION/lib/node_modules
-ENV PATH $NVM_DIR/versions/node/v$NODE_VERSION/bin:$PATH
+#ENV NODE_PATH $NVM_DIR/v$NODE_VERSION/lib/node_modules
+#ENV PATH $NVM_DIR/versions/node/v$NODE_VERSION/bin:$PATH
 
 COPY package.json ./
 
-RUN source $NVM_DIR/nvm.sh && nvm use default && npm install --production
+RUN source $NVM_DIR/nvm.sh; \
+    nvm use \
+    && npm install --production 
 
 COPY . /opt/vote
 
+RUN source $NVM_DIR/nvm.sh; \
+    nvm use \
+    && npm run build
+
 USER 1001
 
-CMD ["npm", "start"]
+CMD ["./docker-cmd.sh"]
