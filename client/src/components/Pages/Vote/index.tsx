@@ -58,9 +58,7 @@ export const Vote: React.FunctionComponent = () =>{
               .then((res) => {
                 switch(res.status) {
                   case 204:
-                      //TODO- probably better to route to a "voted" screen than home
-                      //but this is prob okay for mvp
-                      history.push("/")
+                      history.push("/result/" + voteId)
                       return;
                   default:
                     throw new Error("Error Voting");

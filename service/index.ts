@@ -11,6 +11,11 @@ let currentPolls = [{"id": 1, "name": "eat a whole cake conditional", "voteOptio
 {"id": 2, "name": "fail chad", "voteOptions": ["fail", "conditional", "abstain"]}
 ];
 
+const sampleCount = {
+    "name": "Potate's Vote",
+    "results": {"option1": 1, "option2": 2, "option3": 0} 
+}
+
 app.use(express.static(path.join(__dirname, "/../build")));
 
 // Returns list of all current polls
@@ -46,13 +51,13 @@ app.post("/api/initializePoll", (req,res) => {
 });
 
 // get the count without ending the poll
-app.get("/api/getCount", (req,res) => {
-    res.json({"countYes": 1, "countNo": 2, "countAbstain": 0, "totalCount": 3});
+app.post("/api/getCount", (req,res) => {
+    res.json(sampleCount);
 });
 
 // end the poll and get the final results, called from evals view  
-app.get("/api/endPoll", (req,res) => {
-    res.json({"countYes": 1, "countNo": 2, "countAbstain": 0, "totalCount": 3});
+app.post("/api/endPoll", (req,res) => {
+    res.json(sampleCount);
 });
 /**
  *  TODO - what other endpoints will we need? 
