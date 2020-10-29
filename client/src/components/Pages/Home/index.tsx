@@ -27,6 +27,7 @@ class Home extends Component<HomeProps, HomeState>{
         });
       },
       (error) => {
+        console.log(error)
         this.setState({
           isLoaded: true,
           error

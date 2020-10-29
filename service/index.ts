@@ -1,17 +1,88 @@
 import * as express from "express";
 import * as path from "path";
 import * as cors from "cors";
+import * as dotenv from 'dotenv';
+
+dotenv.config()
+
+// Configure the OpenID Connect strategy for use by Passport.
+const passport = require('passport');
+const Strategy = require('passport-openidconnect').Strategy;
+passport.use(
+  new Strategy(
+    {
+      issuer: 'https://sso.csh.rit.edu/auth/realms/csh',
+      authorizationURL:
+        'https://sso.csh.rit.edu/auth/realms/csh/protocol/openid-connect/auth',
+      tokenURL:
+        'https://sso.csh.rit.edu/auth/realms/csh/protocol/openid-connect/token',
+      userInfoURL:
+        'https://sso.csh.rit.edu/auth/realms/csh/protocol/openid-connect/userinfo',
+      clientID: process.env.CLIENT_ID,
+      clientSecret: process.env.CLIENT_SECRET,
+      callbackURL: 'http://' + process.env.HOST + '/login/callback',
+    },
+    (accessToken, refreshToken, profile, cb) => {
+      return cb(null, profile);
+    }
+  )
+);
+
+// Configure Passport authenticated session persistence.
+passport.serializeUser((user, cb) => {
+  cb(null, user);
+});
+
+passport.deserializeUser((obj, cb) => {
+  cb(null, obj);
+});
 
 const app = express();
 
-app.use(cors());
+
+app.use(
+    require('express-session')({
+      secret:" process.env.EXPRESS_SESSION_SECRET",
+      resave: true,
+      saveUninitialized: true,
+    })
+  );
+// Initialize Passport and restore authentication state from the session.
+app.use(passport.initialize());
+
+app.use(passport.session());
+  
+
 app.use(express.json());
+app.use(express.static(path.join(__dirname, "/../build")));
+app.use(cors());
+
+// Authentication: authenticates with CSH OIDC and returns to origin point
+app.get('/login', passport.authenticate('openidconnect'));
+
+app.get(
+    '/login/callback',
+    passport.authenticate('openidconnect', {
+      failureRedirect: '/login',
+    }),
+    (req, res) => {
+      res.redirect(req.session.returnTo);
+    }
+  );
+  
+app.get('/logout', (req, res) => {
+    // At the moment, this doesn't actually log you out
+    // Apparently I can't destroy sso sessions?
+    req.session.destroy((err) => {
+      res.redirect('/');
+    });
+  });
 
 let currentPolls = [{"id": 1, "name": "eat a whole cake conditional", "voteOptions": ["eat 1 cake","eat 2 cakes", "eat no cakes : ("]},
 {"id": 2, "name": "fail chad", "voteOptions": ["fail", "conditional", "abstain"]}
 ];
 
-app.use(express.static(path.join(__dirname, "/../build")));
+app.use(require('connect-ensure-login').ensureLoggedIn());
 
 // Returns list of all current polls
 app.get("/api/getCurrentPolls", (req,res) => {
