@@ -1,0 +1,32 @@
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata:
+  labels:
+    app: vote
+  name: vote
+  namespace: vote
+spec:
+  successfulBuildsHistoryLimit: 3
+  failedBuildsHistoryLimit: 3
+  triggers:
+    - type: "GitHub"
+      github:
+        secret: "vote"
+  source:
+    git:
+      uri: "https://github.com/ComputerScienceHouse/Vote.git"
+  output:
+    to:
+      kind: ImageStreamTag
+      name: vote:latest
+  runPolicy: SerialLatestOnly
+  strategy:
+    dockerStrategy: {}
+    type: Docker
+  # Lookup local images
+  lookupPolicy:
+    local: true
+  status:
+    tags:
+    - items:
+      tag: latest

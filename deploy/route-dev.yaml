@@ -1,0 +1,22 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+metadata:
+  annotations:
+    kubernetes.io/tls-acme: "true"
+  labels:
+    app: vote
+  name: vote-cshouse
+  namespace: vote
+spec:
+  host: vote.cs.house
+  port:
+    targetPort: 8080-tcp
+  tls:
+    insecureEdgeTerminationPolicy: Redirect
+    termination: edge
+  to:
+    kind: Service
+    name: vote
+    weight: 100
+  wildcardPolicy: None
