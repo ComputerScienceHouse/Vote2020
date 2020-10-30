@@ -55,7 +55,7 @@ export const Result: React.FunctionComponent = () =>{
             }
     }, 10000);
     return () => clearInterval(interval);
-  }, [voteId, ended]);
+  }, [voteId, ended,  oidcUser.access_token]);
 
   useEffect(() => {
     fetch("http://localhost:5000/api/getCount", {
@@ -84,7 +84,7 @@ export const Result: React.FunctionComponent = () =>{
           setLoading(false);
           setError(true);
         });
-  }, [voteId])
+  }, [voteId,  oidcUser.access_token])
 
   function endVoting() {
     if(window.confirm("End Voting?")){

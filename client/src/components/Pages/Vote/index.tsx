@@ -51,7 +51,7 @@ export const Vote: React.FunctionComponent = () =>{
           setLoading(false);
           setError(true);
         });
-  }, [voteId])
+  }, [voteId, oidcUser.access_token])
 
       function buttonClick(idx:number|null) {
         if (idx !== null) {

@@ -20,11 +20,10 @@ export const Home: React.FunctionComponent = () =>{
         setCurrentPolls(result);
       },
       (error) => {
-        console.log(error)
         setLoaded(true);
         setError(error);
       });
-  }, [])
+  }, [oidcUser.access_token ])
 
   return (
     error ?

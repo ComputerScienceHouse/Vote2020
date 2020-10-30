@@ -81,7 +81,6 @@ export const Create: React.FunctionComponent = () =>{
               .catch((error) => {
                 setLoading(false);
                 setError(true);
-                console.log(error);
               });
         } 
 
