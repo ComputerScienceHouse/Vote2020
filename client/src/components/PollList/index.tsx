@@ -16,9 +16,9 @@ const PollList : React.FunctionComponent<PollListProps> = (props, { children }) 
             {currentPolls.length > 0 ?         
                 <ul>
                     {currentPolls.map(currentPoll => (
-                        <li key={currentPoll.name}>
-                            {currentPoll.name} 
-                            <Link to={`/vote/${currentPoll.id}`}>
+                        <li key={currentPoll.title}>
+                            {currentPoll.title} 
+                            <Link to={`/vote/${currentPoll._id}`}>
                                 <button className="btn btn-primary poll-list-button">Join Vote</button>
                             </Link>
                             <hr />

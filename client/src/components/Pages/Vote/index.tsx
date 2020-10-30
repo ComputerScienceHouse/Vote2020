@@ -6,9 +6,9 @@ type RouteParams = {
   voteId: string
 }
 type Poll = {
-  id: string,
-  name: string,
-  voteOptions: Array<string>,
+  _id: string,
+  title: string,
+  choices: Array<string>,
 }
 
 export const Vote: React.FunctionComponent = () =>{
@@ -78,16 +78,16 @@ export const Vote: React.FunctionComponent = () =>{
       <div>Poll not found : (</div> :
         <div>
         <div className="poll-option-list">
-          <div className="poll-name-title-panel">{poll.name}</div>
+          <div className="poll-name-title-panel">{poll.title}</div>
           <div className="poll-options-items">
-          {poll.voteOptions.map(function(option, idx){
+          {poll.choices.map(function(option, idx){
             return (<li key={idx}><button onClick={() => setSelected(idx)} className="btn btn-primary poll-option-button">{option}</button></li>)
             })}
           </div>
         </div>
         <div>
           <div className="option-selected-box">
-          <div className="option-selected-text"> You have selected: <b>{ selected !== null ? poll.voteOptions[selected] : null}</b> </div>
+          <div className="option-selected-text"> You have selected: <b>{ selected !== null ? poll.choices[selected] : null}</b> </div>
           <button 
             onClick={() => buttonClick(selected)} 
             className="btn btn-primary submit-button"
