@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useHistory } from 'react-router-dom';
 import Spinner from "../../Spinner";
 import "./create.css";
+import { useReactOidc } from "@axa-fr/react-oidc-context";
 
 export const Create: React.FunctionComponent = () =>{
     const [pollType, setPollType] = useState("PassFail");
@@ -9,6 +10,8 @@ export const Create: React.FunctionComponent = () =>{
     const [pollOptions, setPollOptions] = useState(["Pass", "Fail or Conditional", "Abstain"]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(false);
+    const { oidcUser } = useReactOidc();
+
     let history = useHistory();
 
     function handleSelectPollType(changeEvent:React.FormEvent<HTMLInputElement>) {
@@ -56,7 +59,10 @@ export const Create: React.FunctionComponent = () =>{
               "type": pollType
           }
           fetch("http://localhost:5000/api/initializePoll", {
-            headers: {"content-type": "application/json"},
+            headers: new Headers({
+              'Authorization': 'Bearer ' + oidcUser.access_token,
+              "content-type": "application/json"
+            }),
             method: "POST",
             body: JSON.stringify(body)
           })

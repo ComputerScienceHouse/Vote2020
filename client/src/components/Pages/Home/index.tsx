@@ -1,51 +1,39 @@
-import React, {Component} from "react";
+import React, {useEffect, useState} from "react";
 import Spinner from "../../Spinner";
 import PollList from "../../PollList";
+import { useReactOidc } from "@axa-fr/react-oidc-context";
 
-type HomeProps = {};
-type HomeState = {
-  error: null | string,
-  isLoaded: boolean,
-  currentPolls: Array<any>
-}
-class Home extends Component<HomeProps, HomeState>{
-  constructor(props:HomeProps) {
-    super(props);
-    this.state = {
-      error: null,
-      isLoaded: false,
-      currentPolls: []
-    };
-  }
-  componentDidMount() {
-    fetch("http://localhost:5000/api/getCurrentPolls")
+export const Home: React.FunctionComponent = () =>{
+  const [error, setError] = useState(null);
+  const [isLoaded, setLoaded] = useState(false);
+  const [currentPolls, setCurrentPolls] = useState([]);
+  const { oidcUser } = useReactOidc();
+
+  useEffect(() => {
+
+    fetch("http://localhost:5000/api/getCurrentPolls", { headers: new Headers({
+      'Authorization': 'Bearer ' + oidcUser.access_token 
+    })})
       .then(res => res.json())
       .then((result) => {
-        this.setState({
-          isLoaded: true,
-          currentPolls: result
-        });
+        setLoaded(true);
+        setCurrentPolls(result);
       },
       (error) => {
-        this.setState({
-          isLoaded: true,
-          error
-        });
+        console.log(error)
+        setLoaded(true);
+        setError(error);
       });
-  }
-  render() {
-    const {error, isLoaded, currentPolls} = this.state;
-    if (error) {
-      return(
+  }, [])
+
+  return (
+    error ?
       <div>Something went wrong! Please Try again</div>
-      );
-    } else if(!isLoaded) {
-      return(<Spinner className="home"/>)
-    }else {
-      return(
-      <PollList currentPolls={currentPolls}/>
-      )}
-  }
+    : !isLoaded ?
+      <Spinner className="home"/> 
+    : <PollList currentPolls={currentPolls}/>
+  )
+
 }
 
 export default Home;
