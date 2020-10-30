@@ -74,11 +74,8 @@ export const Vote: React.FunctionComponent = () =>{
                 }
               })
               .catch((error) => {
+                window.alert("An error occurred (You may have already voted)")
                 history.push("/result/" + voteId)
-
-                // setLoading(false);
-                // setError(true);
-                // console.log(error);
               });
         } 
       }

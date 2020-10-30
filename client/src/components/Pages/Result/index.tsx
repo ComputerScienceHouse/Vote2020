@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, useHistory } from 'react-router-dom';
 import Spinner from "../../Spinner";
 import "./result.css";
+import { useReactOidc } from "@axa-fr/react-oidc-context";
 
 type RouteParams = {
   voteId: string
@@ -21,12 +22,16 @@ export const Result: React.FunctionComponent = () =>{
   const [ended, setEnded] = useState(false);
   const evals = true;
   let history = useHistory();
+  const { oidcUser } = useReactOidc();
 
   useEffect(() => {
     const interval = setInterval(() => {
         if(!ended) {
         fetch("http://localhost:5000/api/getCount", {
-            headers: {"content-type": "application/json"},
+            headers: new Headers({
+              'Authorization': 'Bearer ' + oidcUser.access_token,
+              "content-type": "application/json"
+            }),
             method: "POST",
             body: JSON.stringify({"voteId": voteId})
           })
@@ -57,7 +62,10 @@ export const Result: React.FunctionComponent = () =>{
 
   useEffect(() => {
     fetch("http://localhost:5000/api/getCount", {
-      headers: {"content-type": "application/json"},
+      headers: new Headers({
+        'Authorization': 'Bearer ' + oidcUser.access_token,
+        "content-type": "application/json"
+      }),
       method: "POST",
       body: JSON.stringify({"voteId": voteId})
     })
@@ -87,7 +95,10 @@ export const Result: React.FunctionComponent = () =>{
     if(window.confirm("End Voting?")){
       setLoading(true)
       fetch("http://localhost:5000/api/endPoll", {
-      headers: {"content-type": "application/json"},
+      headers: new Headers({
+        'Authorization': 'Bearer ' + oidcUser.access_token,
+        "content-type": "application/json"
+      }),
       method: "POST",
       body: JSON.stringify({"voteId": voteId})
     })

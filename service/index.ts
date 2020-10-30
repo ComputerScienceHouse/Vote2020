@@ -111,7 +111,7 @@ app.get("/api/getCurrentPolls", passport.authenticate('jwt'), (req,res) => {
 });
 
 app.post("/api/getPollDetails", passport.authenticate('jwt'), (req,res) => {
-    const poll = currentPolls.find(x => x.id === parseInt(req.body.voteId));
+    const poll = currentPolls.find(x => x._id === req.body.voteId);
     if (poll) {
         res.json(poll)
     } else {
@@ -213,6 +213,7 @@ app.post("/api/endPoll", passport.authenticate('jwt'), (req,res) => {
         });
         res.json(count);
       });
+    });
 
 app.get('*', (req,res) =>{
     res.sendFile(path.join(__dirname+"/../build/index.html"));
