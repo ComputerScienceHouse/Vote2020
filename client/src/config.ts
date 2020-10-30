@@ -5,7 +5,7 @@ const configuration = {
   }/authentication/callback`,
   response_type: "code",
   post_logout_redirect_uri: "http://localhost:3000/",
-  scope: "openid profile email offline_access",
+  scope: "openid profile email offline_access groups",
   authority: process.env.REACT_APP_SSO_AUTHORITY,
   silent_redirect_uri: `${window.location.protocol}//${
     window.location.hostname

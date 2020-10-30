@@ -1,3 +1,5 @@
+//@ts-nocheck
+
 import * as express from "express";
 import * as path from "path";
 import * as cors from "cors";
@@ -39,8 +41,6 @@ https.get(options, res => {
             
         })
     })
-
-
   });
 })
 
