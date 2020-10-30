@@ -50,7 +50,6 @@ export const Vote: React.FunctionComponent = () =>{
         (error) => {
           setLoading(false);
           setError(true);
-          console.log(error);
         });
   }, [voteId])
 
@@ -62,7 +61,7 @@ export const Vote: React.FunctionComponent = () =>{
               "content-type": "application/json"
             }),
             method: "POST",
-            body: JSON.stringify({"voteId": voteId, "voteChoice": idx})
+            body: JSON.stringify({"voteId": voteId, "voteChoice": poll?.choices[idx]})
           })
               .then((res) => {
                 switch(res.status) {

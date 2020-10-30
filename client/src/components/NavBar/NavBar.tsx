@@ -9,6 +9,7 @@ import {
 } from "reactstrap";
 import { NavLink } from "react-router-dom";
 import Profile from "./Profile";
+import { useReactOidc } from "@axa-fr/react-oidc-context";
 
 const NavBar: React.FunctionComponent = () => {
   const [isOpen, setIsOpen] = React.useState<boolean>(false);
@@ -16,8 +17,13 @@ const NavBar: React.FunctionComponent = () => {
   const toggle = () => {
     setIsOpen(!isOpen);
   };
+  const { oidcUser } = useReactOidc();
+  let evals = false;
+  if (oidcUser) {
+    evals = oidcUser.profile.groups.includes("eboard-evaluations");
 
-  const isEvals = true;
+  }
+
 
   return (
     <div>
@@ -34,7 +40,7 @@ const NavBar: React.FunctionComponent = () => {
                   Home
                 </NavLink>
               </NavItem>
-              {isEvals ? 
+              {evals ? 
                 <NavItem>
                 <NavLink to="/create" className={"nav-link"}>
                   Create

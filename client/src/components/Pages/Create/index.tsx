@@ -11,6 +11,7 @@ export const Create: React.FunctionComponent = () =>{
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(false);
     const { oidcUser } = useReactOidc();
+    const evals = oidcUser.profile.groups.includes("eboard-evaluations");
 
     let history = useHistory();
 
@@ -86,7 +87,7 @@ export const Create: React.FunctionComponent = () =>{
 
   return(
     loading ? <Spinner className="vote"></Spinner> :
-    error ? <div>Something went wrong : (</div> :
+    error || !evals ? <div>Something went wrong : (</div> :
       <div>
         <div className="create-poll-box">
         <div className="create-poll-title-panel">Create Vote</div>

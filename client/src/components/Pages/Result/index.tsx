@@ -20,10 +20,9 @@ export const Result: React.FunctionComponent = () =>{
 
   const [poll, setPoll] = useState<Poll|undefined>(undefined);
   const [ended, setEnded] = useState(false);
-  const evals = true;
   let history = useHistory();
   const { oidcUser } = useReactOidc();
-
+  const evals = oidcUser.profile.groups.includes("eboard-evaluations");
   useEffect(() => {
     const interval = setInterval(() => {
         if(!ended) {
@@ -48,12 +47,10 @@ export const Result: React.FunctionComponent = () =>{
               .then((result) => {
                 setLoading(false);
                 setPoll(result)
-                console.log(result)
               },
               (error) => {
                 setLoading(false);
                 setError(true);
-                console.log(error);
               });
             }
     }, 10000);
@@ -82,12 +79,10 @@ export const Result: React.FunctionComponent = () =>{
         .then((result) => {
           setLoading(false);
           setPoll(result)
-          console.log(result)
         },
         (error) => {
           setLoading(false);
           setError(true);
-          console.log(error);
         });
   }, [voteId])
 
@@ -116,12 +111,10 @@ export const Result: React.FunctionComponent = () =>{
           setLoading(false);
           setPoll(result)
           setEnded(true)
-          console.log(result)
         },
         (error) => {
           setLoading(false);
           setError(true);
-          console.log(error);
         });
     }
   }
