@@ -4,12 +4,14 @@ import * as express from "express";
 import * as path from "path";
 import * as cors from "cors";
 import * as dotenv from 'dotenv';
+
 dotenv.config()
 
 const passport = require('passport');
 
 const https = require('https')
 var url = require("url");
+
 var JwtStrategy = require('passport-jwt').Strategy,
     ExtractJwt = require('passport-jwt').ExtractJwt;
 
@@ -69,7 +71,22 @@ let currentPolls = [{"id": 1, "name": "eat a whole cake conditional", "voteOptio
 
 // Returns list of all current polls
 app.get("/api/getCurrentPolls", passport.authenticate('jwt'), (req,res) => {
-    res.json(currentPolls);
+    https.get({hostname: "sso.csh.rit.edu", 
+        path: "/auth/realms/csh/protocol/openid-connect/userinfo", 
+        headers: {"Authorization": req.headers.authorization}
+    }, infoRes => {
+        infoRes.setEncoding('utf8');
+        infoRes.on('data', function (chunk) {
+            const groups = JSON.parse(chunk).groups;
+            if (!groups.includes("active")) {
+                res.status(403).send();
+            } else if (groups.includes("10weeks") || groups.includes("fall-coop")) {
+                res.status(403).send();
+            } else {
+                res.json(currentPolls)
+            }
+        });
+    })
 });
 
 app.post("/api/getPollDetails", passport.authenticate('jwt'), (req,res) => {
