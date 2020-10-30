@@ -19,7 +19,8 @@
     "react-router-dom": "^5.2.0",
     "react-scripts": "^3.4.3",
     "reactstrap": "^8.6.0",
-    "ts-node": "^9.0.0"
+    "ts-node": "^9.0.0",
+    "typescript": "^4.0.3"
   },
   "scripts": {
     "start": "concurrently \"ts-node ./service/index.ts\" \"cd client && react-scripts start\"",

@@ -11,7 +11,7 @@ let currentPolls = [{"id": 1, "name": "eat a whole cake conditional", "voteOptio
 {"id": 2, "name": "fail chad", "voteOptions": ["fail", "conditional", "abstain"]}
 ];
 
-app.use(express.static(path.join(__dirname, "/../build")));
+app.use("/", express.static(path.join(__dirname, "/../client/build/")));
 
 // Returns list of all current polls
 app.get("/api/getCurrentPolls", (req,res) => {
@@ -50,11 +50,13 @@ app.get("/api/endPoll", (req,res) => {
  *  TODO - what other endpoints will we need? 
  * Will Evals need to get a list of all who voted (to poke people if they're slow)?
  */
+
 app.get('*', (req,res) =>{
-    res.sendFile(path.join(__dirname+"/../build/index.html"));
+    res.sendFile(path.join(__dirname+"/../client/build/index.html"));
 });
 
-const port = process.env.PORT || 5000;
+
+const port = process.env.PORT || 8080;
 app.listen(port);
 
 console.log("App is listening on port " + port);

@@ -18,7 +18,7 @@ class Home extends Component<HomeProps, HomeState>{
     };
   }
   componentDidMount() {
-    fetch("http://localhost:5000/api/getCurrentPolls")
+    fetch(process.env.REACT_APP_BASE_API_URL+ "/api/getCurrentPolls")
       .then(res => res.json())
       .then((result) => {
         this.setState({

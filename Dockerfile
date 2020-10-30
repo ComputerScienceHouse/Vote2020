@@ -40,7 +40,7 @@ COPY . /opt/vote
 
 RUN source $NVM_DIR/nvm.sh; \
     nvm use \
-    && npm run build
+    && cd client && npm run build
 
 USER 1001
 

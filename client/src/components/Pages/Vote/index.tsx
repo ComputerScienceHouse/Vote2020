@@ -22,7 +22,7 @@ export const Vote: React.FunctionComponent = () =>{
   let history = useHistory();
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/getPollDetails", {
+    fetch(process.env.REACT_APP_BASE_API_URL+"/api/getPollDetails", {
       headers: {"content-type": "application/json"},
       method: "POST",
       body: JSON.stringify({"voteId": voteId})
@@ -50,7 +50,7 @@ export const Vote: React.FunctionComponent = () =>{
 
       function buttonClick(idx:number|null) {
         if (idx !== null) {
-          fetch("http://localhost:5000/api/sendVote", {
+          fetch(process.env.REACT_APP_BASE_API_URL+"/api/sendVote", {
             headers: {"content-type": "application/json"},
             method: "POST",
             body: JSON.stringify({"voteId": voteId, "voteChoice": idx})
