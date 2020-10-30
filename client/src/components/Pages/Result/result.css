@@ -1,0 +1,32 @@
+.result-title-panel {
+    color: inherit;
+    font-size: 20px;
+    padding: 20px;
+}
+
+.result-list {
+    border: none;
+    border-radius: 2px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.3);
+}
+
+.refresh-message {
+    padding: 12px;
+}
+
+.result-list-items{
+    background-color: white;
+    font-size: 14px;
+    padding:12px;
+    padding-right: 16px;
+}
+
+.result-list-items li {
+    list-style: none;
+    padding-top: 12px;
+}
+
+.exit-button {
+    margin-top: 24px;
+    text-align: center;
+}
