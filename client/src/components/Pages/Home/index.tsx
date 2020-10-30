@@ -3,12 +3,6 @@ import Spinner from "../../Spinner";
 import PollList from "../../PollList";
 import { useReactOidc } from "@axa-fr/react-oidc-context";
 
-type HomeProps = {};
-type HomeState = {
-  error: null | string,
-  isLoaded: boolean,
-  currentPolls: Array<any>
-}
 export const Home: React.FunctionComponent = () =>{
   const [error, setError] = useState(null);
   const [isLoaded, setLoaded] = useState(false);
