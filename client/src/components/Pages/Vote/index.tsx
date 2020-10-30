@@ -65,9 +65,11 @@ export const Vote: React.FunctionComponent = () =>{
                 }
               })
               .catch((error) => {
-                setLoading(false);
-                setError(true);
-                console.log(error);
+                history.push("/result/" + voteId)
+
+                // setLoading(false);
+                // setError(true);
+                // console.log(error);
               });
         } 
       }

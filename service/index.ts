@@ -40,7 +40,6 @@ app.get("/api/getCurrentPolls", (req,res) => {
 });
 
 app.post("/api/getPollDetails", (req,res) => {
-    console.log(currentPolls)
     const poll = currentPolls.find(x => x._id === req.body.voteId);
     if (poll) {
         res.json(poll)
@@ -72,7 +71,6 @@ app.post("/api/sendVote", (req,res) => {
             res.status(400).send();
         } else { 
             collection.insert(vote, function(err,docsInserted){
-            console.log(docsInserted);
             res.status(204).send();
             });
         }
@@ -90,8 +88,6 @@ app.post("/api/initializePoll", (req,res) => {
     }
     const collection = db.collection("Polls")
         collection.insert(newPoll, function(err,docsInserted){
-            console.log(docsInserted);
-            console.log(newPoll);
             newPoll._id = newPoll._id.toHexString();
         });
     currentPolls.push(newPoll);
@@ -100,12 +96,50 @@ app.post("/api/initializePoll", (req,res) => {
 
 // get the count without ending the poll
 app.post("/api/getCount", (req,res) => {
-    res.json(sampleCount);
+    const count = {name: "", results:{}}
+    const pollCollection = db.collection("Polls")
+    pollCollection.findOne({"_id": ObjectID.createFromHexString(req.body.voteId)}).then(poll => {
+        count.name = poll.title;
+    });
+    const collection = db.collection("Votes")
+    collection.find({"poll": ObjectID.createFromHexString(req.body.voteId)}).toArray(function(err, result) {
+        if (err) throw err;
+        result.forEach(element => {
+            const choice = element.choice;
+            if (count.results[choice]) {
+                count.results[choice] += 1;
+            } else {
+                count.results[choice] = 1;
+            }
+        });
+        res.json(count);
+      });
 });
 
 // end the poll and get the final results, called from evals view  
 app.post("/api/endPoll", (req,res) => {
-    res.json(sampleCount);
+    var removeIndex = currentPolls.map(item => item._id)
+                       .indexOf(req.body.voteId);
+    ~removeIndex && currentPolls.splice(removeIndex, 1);
+
+    const count = {name: "", results:{}}
+    const pollCollection = db.collection("Polls")
+    pollCollection.findOne({"_id": ObjectID.createFromHexString(req.body.voteId)}).then(poll => {
+        count.name = poll.title;
+    });
+    const collection = db.collection("Votes")
+    collection.find({"poll": ObjectID.createFromHexString(req.body.voteId)}).toArray(function(err, result) {
+        if (err) throw err;
+        result.forEach(element => {
+            const choice = element.choice;
+            if (count.results[choice]) {
+                count.results[choice] += 1;
+            } else {
+                count.results[choice] = 1;
+            }
+        });
+        res.json(count);
+      });
 });
 
 app.get('*', (req,res) =>{

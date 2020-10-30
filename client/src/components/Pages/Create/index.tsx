@@ -52,7 +52,8 @@ export const Create: React.FunctionComponent = () =>{
           setLoading(true);
           const body = {
               "title": pollTitle,
-              "options": pollOptions
+              "options": pollOptions,
+              "type": pollType
           }
           fetch("http://localhost:5000/api/initializePoll", {
             headers: {"content-type": "application/json"},
