@@ -42,7 +42,7 @@ spec:
     imageChangeParams:
       automatic: true
       containerNames:
-      - vote
+      - vote-http
       from:
         kind: ImageStreamTag
         name: vote:latest
