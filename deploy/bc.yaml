@@ -12,6 +12,7 @@ spec:
     - type: "GitHub"
       github:
         secret: "vote"
+    - type: "ConfigChange"
   source:
     ref: docker
     git:
