@@ -59,7 +59,7 @@ export const Create: React.FunctionComponent = () =>{
               "options": pollOptions,
               "type": pollType
           }
-          fetch("http://localhost:5000/api/initializePoll", {
+          fetch(process.env.REACT_APP_BASE_API_URL + "/api/initializePoll", {
             headers: new Headers({
               'Authorization': 'Bearer ' + oidcUser.access_token,
               "content-type": "application/json"
