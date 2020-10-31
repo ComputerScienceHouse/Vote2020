@@ -36,3 +36,14 @@ spec:
             port: 8080
           initialDelaySeconds: 0
           timeoutSeconds: 1
+  triggers:
+  - type: ConfigChange
+  - type: ImageChange
+    imageChangeParams:
+      automatic: true
+      containerNames:
+      - vote
+      from:
+        kind: ImageStreamTag
+        name: vote:latest
+        namespace: vote
