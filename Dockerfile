@@ -31,16 +31,20 @@ RUN source $NVM_DIR/nvm.sh; \
 #ENV PATH $NVM_DIR/versions/node/v$NODE_VERSION/bin:$PATH
 
 COPY package.json ./
+COPY client/package.json ./client/
 
 RUN source $NVM_DIR/nvm.sh; \
     nvm use \
-    && npm install --production 
+    && npm install \
+    && cd client && npm install
 
 COPY . /opt/vote
 
 RUN source $NVM_DIR/nvm.sh; \
     nvm use \
-    && cd client && npm run build
+    && cd client \
+    && export PATH=$PATH:$(npm bin) \
+    && npm run build
 
 USER 1001
 
