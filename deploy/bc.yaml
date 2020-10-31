@@ -13,6 +13,7 @@ spec:
       github:
         secret: "vote"
   source:
+    ref: docker
     git:
       uri: "https://github.com/ComputerScienceHouse/Vote.git"
   output:
