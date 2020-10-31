@@ -2,13 +2,15 @@ import React, { useEffect, useState } from "react";
 import { useParams, useHistory } from 'react-router-dom';
 import Spinner from "../../Spinner";
 import "./vote.css";
+import { useReactOidc } from "@axa-fr/react-oidc-context";
+
 type RouteParams = {
   voteId: string
 }
 type Poll = {
-  id: string,
-  name: string,
-  voteOptions: Array<string>,
+  _id: string,
+  title: string,
+  choices: Array<string>,
 }
 
 export const Vote: React.FunctionComponent = () =>{
@@ -18,12 +20,16 @@ export const Vote: React.FunctionComponent = () =>{
   const [error, setError] = useState(false);
 
   const [selected, setSelected] = useState<number|null>(null);
+  const { oidcUser } = useReactOidc();
 
   let history = useHistory();
 
   useEffect(() => {
-    fetch(process.env.REACT_APP_BASE_API_URL+"/api/getPollDetails", {
-      headers: {"content-type": "application/json"},
+    fetch(process.env.REACT_APP_BASE_API_URL + "/api/getPollDetails", {
+      headers: new Headers({
+        'Authorization': 'Bearer ' + oidcUser.access_token,
+        "content-type": "application/json"
+      }),
       method: "POST",
       body: JSON.stringify({"voteId": voteId})
     })
@@ -44,32 +50,31 @@ export const Vote: React.FunctionComponent = () =>{
         (error) => {
           setLoading(false);
           setError(true);
-          console.log(error);
         });
-  }, [voteId])
+  }, [voteId, oidcUser.access_token])
 
       function buttonClick(idx:number|null) {
         if (idx !== null) {
-          fetch(process.env.REACT_APP_BASE_API_URL+"/api/sendVote", {
-            headers: {"content-type": "application/json"},
+          fetch(process.env.REACT_APP_BASE_API_URL + "/api/sendVote", {
+            headers: new Headers({
+              'Authorization': 'Bearer ' + oidcUser.access_token,
+              "content-type": "application/json"
+            }),
             method: "POST",
-            body: JSON.stringify({"voteId": voteId, "voteChoice": idx})
+            body: JSON.stringify({"voteId": voteId, "voteChoice": poll?.choices[idx]})
           })
               .then((res) => {
                 switch(res.status) {
                   case 204:
-                      //TODO- probably better to route to a "voted" screen than home
-                      //but this is prob okay for mvp
-                      history.push("/")
+                      history.push("/result/" + voteId)
                       return;
                   default:
                     throw new Error("Error Voting");
                 }
               })
               .catch((error) => {
-                setLoading(false);
-                setError(true);
-                console.log(error);
+                window.alert("An error occurred (You may have already voted)")
+                history.push("/result/" + voteId)
               });
         } 
       }
@@ -80,16 +85,16 @@ export const Vote: React.FunctionComponent = () =>{
       <div>Poll not found : (</div> :
         <div>
         <div className="poll-option-list">
-          <div className="poll-name-title-panel">{poll.name}</div>
+          <div className="poll-name-title-panel">{poll.title}</div>
           <div className="poll-options-items">
-          {poll.voteOptions.map(function(option, idx){
+          {poll.choices.map(function(option, idx){
             return (<li key={idx}><button onClick={() => setSelected(idx)} className="btn btn-primary poll-option-button">{option}</button></li>)
             })}
           </div>
         </div>
         <div>
           <div className="option-selected-box">
-          <div className="option-selected-text"> You have selected: <b>{ selected !== null ? poll.voteOptions[selected] : null}</b> </div>
+          <div className="option-selected-text"> You have selected: <b>{ selected !== null ? poll.choices[selected] : null}</b> </div>
           <button 
             onClick={() => buttonClick(selected)} 
             className="btn btn-primary submit-button"

@@ -1,0 +1,64 @@
+.create-poll-box {
+    border: none;
+    border-radius: 2px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.3);
+}
+
+.create-poll-title-panel {
+    color: inherit;
+    font-size: 20px;
+    padding: 20px;
+}
+
+.poll-creation-items {
+    background-color: white;
+    font-size: 14px;
+    padding:24px;
+    padding-right: 16px;
+}
+
+.title-input {
+    margin-left: 12px;
+    height: 32px !important;
+}
+
+.conditional-input {
+    height: 32px !important;
+}
+
+.confirmation-box {
+    border: none;
+    border-radius: 2px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.3);
+    margin-top: 24px;
+    text-align: center;
+    font-size: 24px;
+    padding: 24px;
+
+}
+
+.radio {
+    display: inline;
+    margin-left: 24px;
+}
+
+.type-form {
+    margin-top: 24px;
+}
+
+.confirmation-title, .confirmation-items {
+    text-align: left;
+
+}
+
+.add-option-button {
+    margin-top: 12px;
+}
+
+.delete-option-button {
+    margin-left: 24px;
+    height: 18px;
+    font-size: 12px;
+    width: 18px;
+    padding: 0px !important;
+}
