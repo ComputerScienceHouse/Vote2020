@@ -35,9 +35,9 @@ COPY client/package.json ./client/
 
 #RUN source $NVM_DIR/nvm.sh; \
 #    nvm use \
-#    && npm install \
-#    && cd client && npm install
-RUN npm install && cd client && npm install
+#    && npm install --production=false \
+#    && cd client && npm install --production=false
+RUN npm install --production=false && cd client && npm install --production=false
 
 COPY . /opt/vote
 
