@@ -21,6 +21,9 @@ spec:
       containers:
       - name: vote-http
         image: vote
+        envFrom:
+        - configMapRef:
+            name: vote
         livenessProbe:
           httpGet:
             path: /
