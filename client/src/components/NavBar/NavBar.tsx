@@ -24,9 +24,6 @@ const NavBar: React.FunctionComponent = () => {
 
   }
 
-  //debug
-  evals = true;
-
   return (
     <div>
       <Navbar color="primary" dark expand="lg" fixed="top">
