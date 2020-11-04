@@ -24,6 +24,8 @@ const NavBar: React.FunctionComponent = () => {
 
   }
 
+  //debug
+  evals = true;
 
   return (
     <div>

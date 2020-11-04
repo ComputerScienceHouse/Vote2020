@@ -22,7 +22,7 @@ export const Result: React.FunctionComponent = () =>{
   const [ended, setEnded] = useState(false);
   let history = useHistory();
   const { oidcUser } = useReactOidc();
-  const evals = oidcUser.profile.groups.includes("eboard-evaluations");
+  const evals = true oidcUser.profile.groups.includes("eboard-evaluations");
   useEffect(() => {
     const interval = setInterval(() => {
         if(!ended) {

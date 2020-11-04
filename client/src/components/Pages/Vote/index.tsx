@@ -11,6 +11,7 @@ type Poll = {
   _id: string,
   title: string,
   choices: Array<string>,
+  type: string,
 }
 
 export const Vote: React.FunctionComponent = () =>{
@@ -88,8 +89,24 @@ export const Vote: React.FunctionComponent = () =>{
           <div className="poll-name-title-panel">{poll.title}</div>
           <div className="poll-options-items">
           {poll.choices.map(function(option, idx){
-            return (<li key={idx}><button onClick={() => setSelected(idx)} className="btn btn-primary poll-option-button">{option}</button></li>)
-            })}
+            if (poll.type === "Conditional") {
+              return (<li key={idx}><button onClick={() => setSelected(idx)} className="btn btn-primary poll-option-button btn-warning">{option}</button></li>);
+            }
+            switch(option) {
+              case "Pass":
+                return (<li key={idx}><button onClick={() => setSelected(idx)} className="btn btn-primary poll-option-button btn-success">{option}</button></li>);
+              case "Conditional":
+                return (<li key={idx}><button onClick={() => setSelected(idx)} className="btn btn-primary poll-option-button btn-warning">{option}</button></li>);
+              case "Fail or Conditional":
+                return (<li key={idx}><button onClick={() => setSelected(idx)} className="btn btn-primary poll-option-button btn-warning">{option}</button></li>);
+              case "Fail":
+                return (<li key={idx}><button onClick={() => setSelected(idx)} className="btn btn-primary poll-option-button btn-danger">{option}</button></li>);
+              case "Abstain":
+                return (<li key={idx}><button onClick={() => setSelected(idx)} className="btn btn-primary poll-option-button btn-secondary">{option}</button></li>);
+              default:
+                return (<li key={idx}><button onClick={() => setSelected(idx)} className="btn btn-primary poll-option-button">{option}</button></li>);
+            }
+          })}
           </div>
         </div>
         <div>

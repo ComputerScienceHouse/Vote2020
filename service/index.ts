@@ -85,7 +85,7 @@ app.use(cors());
 let currentPolls = [
   {
     title: "test Poll",
-    choices: ["fail", "conditional", "abstain"],
+    choices: ["Fail", "Conditional", "Abstain"],
     type: "FailConditional",
     _id: "5f9b2d5d601e1c6971430638",
   },
