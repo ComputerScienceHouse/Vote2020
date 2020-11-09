@@ -19,6 +19,11 @@ MongoClient.connect(process.env.DB_URL, function (err, client) {
     db = client.db("vote")
 })
 
+// Only use the prod collections if we're set for production
+const coll_prefix = process.env.NODE_ENV === 'production'? '' : 'dev-'
+const polls_collection = db.collection(`${coll_prefix}Polls`);
+const votes_collection = db.collection(`${coll_prefix}Votes`);
+
 const passport = require('passport');
 
 const https = require('https')
@@ -153,13 +158,12 @@ app.post("/api/sendVote", passport.authenticate('jwt'), (req,res) => {
                     userName: vote.userName,
                     poll: vote.poll
                 }
-                const collection = db.collection("Votes");
 
-                collection.findOne(findData).then(hasVoted => {
+                votes_collection.findOne(findData).then(hasVoted => {
                 if(hasVoted) {
                     res.status(400).send();
                 } else { 
-                    collection.insert(vote, function(err,docsInserted){
+                    votes_collection.insert(vote, function(err,docsInserted){
                         res.status(204).send();
                     });
                 }
@@ -188,8 +192,7 @@ app.post("/api/initializePoll", passport.authenticate('jwt'), (req,res) => {
                     "type": req.body.type,
                     "time": new Date()
                 }
-                const collection = db.collection("Polls")
-                collection.insert(newPoll, function(err,docsInserted){
+                polls_collection.insert(newPoll, function(err,docsInserted){
                     newPoll._id = newPoll._id.toHexString();
                     currentPolls.push(newPoll);
                     res.json({"pollId": newPoll._id});
@@ -214,12 +217,10 @@ app.post("/api/getCount",passport.authenticate('jwt'), (req,res) => {
                 res.status(403).send();
             } else {
                 const count = {name: "", results:{}}
-                const pollCollection = db.collection("Polls")
-                pollCollection.findOne({"_id": ObjectID.createFromHexString(req.body.voteId)}).then(poll => {
+                polls_collection.findOne({"_id": ObjectID.createFromHexString(req.body.voteId)}).then(poll => {
                     count.name = poll.title;
                 });
-                const collection = db.collection("Votes")
-                collection.find({"poll": ObjectID.createFromHexString(req.body.voteId)}).toArray(function(err, result) {
+                votes_collection.find({"poll": ObjectID.createFromHexString(req.body.voteId)}).toArray(function(err, result) {
                     if (err) throw err;
                     result.forEach(element => {
                         const choice = element.choice;
@@ -255,12 +256,10 @@ app.post("/api/endPoll", passport.authenticate('jwt'), (req,res) => {
                 ~removeIndex && currentPolls.splice(removeIndex, 1);
 
                 const count = {name: "", results:{}}
-                const pollCollection = db.collection("Polls")
-                pollCollection.findOne({"_id": ObjectID.createFromHexString(req.body.voteId)}).then(poll => {
+                polls_collection.findOne({"_id": ObjectID.createFromHexString(req.body.voteId)}).then(poll => {
                     count.name = poll.title;
                 });
-                const collection = db.collection("Votes")
-                collection.find({"poll": ObjectID.createFromHexString(req.body.voteId)}).toArray(function(err, result) {
+                votes_collection.find({"poll": ObjectID.createFromHexString(req.body.voteId)}).toArray(function(err, result) {
                     if (err) throw err;
                     result.forEach(element => {
                         const choice = element.choice;
