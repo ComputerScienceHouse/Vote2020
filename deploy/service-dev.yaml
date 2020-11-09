@@ -12,6 +12,6 @@ spec:
     protocol: TCP
     targetPort: 8080
   selector:
-    deployment: vote-dev
+    deploymentconfig: vote-dev
   sessionAffinity: None
   type: ClusterIP
