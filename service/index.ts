@@ -83,7 +83,7 @@ let currentPolls = [
         _id: "5f9b2d5d601e1c6971430638" }
 ];
 
-app.use(express.static(path.join(__dirname, "/../build")));
+app.use("/", express.static(path.join(__dirname, "/../client/build/")));
 
 // Returns list of all current polls
 app.get("/api/getCurrentPolls", passport.authenticate('jwt'), (req,res) => {
@@ -279,10 +279,11 @@ app.post("/api/endPoll", passport.authenticate('jwt'), (req,res) => {
     });
 
 app.get('*', (req,res) =>{
-    res.sendFile(path.join(__dirname+"/../build/index.html"));
+    res.sendFile(path.join(__dirname+"/../client/build/index.html"));
 });
 
-const port = process.env.PORT || 5000;
+
+const port = process.env.PORT || 8080;
 app.listen(port);
 
 console.log("App is listening on port " + port);

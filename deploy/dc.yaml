@@ -1,0 +1,49 @@
+kind: DeploymentConfig
+apiVersion: v1
+metadata:
+  name: vote
+  labels:
+    app: vote
+  namespace: vote
+spec:
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    deploymentconfig: vote
+  strategy:
+    type: Rolling
+  template:
+    metadata:
+      labels:
+        app: vote
+        deploymentconfig: vote
+    spec:
+      containers:
+      - name: vote-http
+        image: vote
+        envFrom:
+        - configMapRef:
+            name: vote
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 8080
+          initialDelaySeconds: 0
+          timeoutSeconds: 1
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 8080
+          initialDelaySeconds: 0
+          timeoutSeconds: 1
+  triggers:
+  - type: ConfigChange
+  - type: ImageChange
+    imageChangeParams:
+      automatic: true
+      containerNames:
+      - vote-http
+      from:
+        kind: ImageStreamTag
+        name: vote:latest
+        namespace: vote

@@ -26,7 +26,7 @@ export const Result: React.FunctionComponent = () =>{
   useEffect(() => {
     const interval = setInterval(() => {
         if(!ended) {
-        fetch("http://localhost:5000/api/getCount", {
+        fetch(process.env.REACT_APP_BASE_API_URL + "/api/getCount", {
             headers: new Headers({
               'Authorization': 'Bearer ' + oidcUser.access_token,
               "content-type": "application/json"
@@ -58,7 +58,7 @@ export const Result: React.FunctionComponent = () =>{
   }, [voteId, ended,  oidcUser.access_token]);
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/getCount", {
+    fetch(process.env.REACT_APP_BASE_API_URL + "/api/getCount", {
       headers: new Headers({
         'Authorization': 'Bearer ' + oidcUser.access_token,
         "content-type": "application/json"
@@ -89,7 +89,7 @@ export const Result: React.FunctionComponent = () =>{
   function endVoting() {
     if(window.confirm("End Voting?")){
       setLoading(true)
-      fetch("http://localhost:5000/api/endPoll", {
+      fetch(process.env.REACT_APP_BASE_API_URL + "/api/endPoll", {
       headers: new Headers({
         'Authorization': 'Bearer ' + oidcUser.access_token,
         "content-type": "application/json"

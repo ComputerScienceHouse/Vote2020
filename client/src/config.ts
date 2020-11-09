@@ -1,5 +1,5 @@
 const configuration = {
-  client_id: process.env.REACT_APP_SSO_CLIENT_ID,
+  client_id: "vote",
   redirect_uri: `${window.location.protocol}//${window.location.hostname}${
     window.location.port ? `:${window.location.port}` : ""
   }/authentication/callback`,

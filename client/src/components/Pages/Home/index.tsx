@@ -11,7 +11,7 @@ export const Home: React.FunctionComponent = () =>{
 
   useEffect(() => {
 
-    fetch("http://localhost:5000/api/getCurrentPolls", { headers: new Headers({
+    fetch(process.env.REACT_APP_BASE_API_URL + "/api/getCurrentPolls", { headers: new Headers({
       'Authorization': 'Bearer ' + oidcUser.access_token 
     })})
       .then(res => res.json())

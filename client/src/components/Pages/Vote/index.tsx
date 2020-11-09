@@ -25,7 +25,7 @@ export const Vote: React.FunctionComponent = () =>{
   let history = useHistory();
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/getPollDetails", {
+    fetch(process.env.REACT_APP_BASE_API_URL + "/api/getPollDetails", {
       headers: new Headers({
         'Authorization': 'Bearer ' + oidcUser.access_token,
         "content-type": "application/json"
@@ -55,7 +55,7 @@ export const Vote: React.FunctionComponent = () =>{
 
       function buttonClick(idx:number|null) {
         if (idx !== null) {
-          fetch("http://localhost:5000/api/sendVote", {
+          fetch(process.env.REACT_APP_BASE_API_URL + "/api/sendVote", {
             headers: new Headers({
               'Authorization': 'Bearer ' + oidcUser.access_token,
               "content-type": "application/json"
