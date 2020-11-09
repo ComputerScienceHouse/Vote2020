@@ -1,12 +1,13 @@
 {
   "compilerOptions": {
+    "module": "commonjs",
     "sourceMap": true,
     "target": "es2020",
     "outDir": "./dist",
-    "baseUrl": "./src"
+    "baseUrl": "./service"
   },
   "include": [
-    "src/**/*.ts"
+    "service/**/*.ts",
   ],
   "exclude": [
     "node_modules"
