@@ -3,7 +3,7 @@ kind: BuildConfig
 metadata:
   labels:
     app: vote
-  name: vote
+  name: vote-dev
   namespace: vote
 spec:
   successfulBuildsHistoryLimit: 3
@@ -14,13 +14,13 @@ spec:
         secret: "vote"
     - type: "ConfigChange"
   source:
-    ref: main
+    ref: develop
     git:
       uri: "https://github.com/ComputerScienceHouse/Vote.git"
   output:
     to:
       kind: ImageStreamTag
-      name: vote:latest
+      name: vote:develop
   runPolicy: SerialLatestOnly
   strategy:
     dockerStrategy: {}
@@ -31,4 +31,4 @@ spec:
   status:
     tags:
     - items:
-      tag: latest
+      tag: develop
