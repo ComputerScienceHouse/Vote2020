@@ -1,6 +1,6 @@
 # Deployment instructions
 
-Vote is meant to be deployed on an OKD/Openshift cluster.
+Vote is meant to be deployed on an OKD/OpenShift cluster.
 This directory contains most of the files needed to do that, but doesn't include the config maps, since they contain secrets.
 You'll need to create 2 config maps, `vote` and `vote-dev`, which should look rather like this, but with placeholders filled in:
 ```yaml
