@@ -92,20 +92,27 @@ export const Vote: React.FunctionComponent = () =>{
             if (poll.type === "Conditional") {
               return (<li key={idx}><button onClick={() => setSelected(idx)} className="btn btn-primary poll-option-button btn-warning">{option}</button></li>);
             }
+
+            let btnClass = "btn btn-primary poll-option-button ";
             switch(option) {
               case "Pass":
-                return (<li key={idx}><button onClick={() => setSelected(idx)} className="btn btn-primary poll-option-button btn-success">{option}</button></li>);
+                btnClass += "btn-success";
+                break;
               case "Conditional":
-                return (<li key={idx}><button onClick={() => setSelected(idx)} className="btn btn-primary poll-option-button btn-warning">{option}</button></li>);
+                btnClass += "btn-warning";
+                break;
               case "Fail or Conditional":
-                return (<li key={idx}><button onClick={() => setSelected(idx)} className="btn btn-primary poll-option-button btn-warning">{option}</button></li>);
+                btnClass += "btn-warning";
+                break;
               case "Fail":
-                return (<li key={idx}><button onClick={() => setSelected(idx)} className="btn btn-primary poll-option-button btn-danger">{option}</button></li>);
+                btnClass += "btn-danger";
+                break;
               case "Abstain":
-                return (<li key={idx}><button onClick={() => setSelected(idx)} className="btn btn-primary poll-option-button btn-secondary">{option}</button></li>);
-              default:
-                return (<li key={idx}><button onClick={() => setSelected(idx)} className="btn btn-primary poll-option-button">{option}</button></li>);
+                btnClass += "btn-secondary";
+                break;
             }
+
+            return (<li key={idx}><button onClick={() => setSelected(idx)} className={btnClass}>{option}</button></li>);
           })}
           </div>
         </div>
