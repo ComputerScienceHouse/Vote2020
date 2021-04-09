@@ -23,7 +23,14 @@ spec:
       name: vote:latest
   runPolicy: SerialLatestOnly
   strategy:
-    dockerStrategy: {}
+    dockerStrategy:
+      env:
+        - name: REACT_APP_SSO_CLIENT_ID
+          value: vote
+        - name: REACT_APP_SSO_AUTHORITY
+          value: https://sso.csh.rit.edu/auth/realms/csh
+        - name: REACT_APP_BASE_API_URL
+          value: https://vote.csh.rit.edu
     type: Docker
   # Lookup local images
   lookupPolicy:
