@@ -11,6 +11,7 @@ type Poll = {
   _id: string,
   title: string,
   choices: Array<string>,
+  type: string,
 }
 
 export const Vote: React.FunctionComponent = () =>{
@@ -88,8 +89,31 @@ export const Vote: React.FunctionComponent = () =>{
           <div className="poll-name-title-panel">{poll.title}</div>
           <div className="poll-options-items">
           {poll.choices.map(function(option, idx){
-            return (<li key={idx}><button onClick={() => setSelected(idx)} className="btn btn-primary poll-option-button">{option}</button></li>)
-            })}
+            if (poll.type === "Conditional") {
+              return (<li key={idx}><button onClick={() => setSelected(idx)} className="btn btn-primary poll-option-button btn-warning">{option}</button></li>);
+            }
+
+            let btnClass = "btn btn-primary poll-option-button ";
+            switch(option) {
+              case "Pass":
+                btnClass += "btn-success";
+                break;
+              case "Conditional":
+                btnClass += "btn-warning";
+                break;
+              case "Fail or Conditional":
+                btnClass += "btn-warning";
+                break;
+              case "Fail":
+                btnClass += "btn-danger";
+                break;
+              case "Abstain":
+                btnClass += "btn-secondary";
+                break;
+            }
+
+            return (<li key={idx}><button onClick={() => setSelected(idx)} className={btnClass}>{option}</button></li>);
+          })}
           </div>
         </div>
         <div>
