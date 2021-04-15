@@ -3,6 +3,8 @@ import * as path from "path";
 import * as cors from "cors";
 import * as dotenv from "dotenv";
 
+import { getUserInfo, requireVoting, requireEvals } from "./middleware";
+
 var MongoClient = require("mongodb").MongoClient;
 
 var ObjectID = require("mongodb").ObjectID;
@@ -90,234 +92,120 @@ MongoClient.connect(process.env.DB_URL, function (err, client) {
 
   app.use("/", express.static(path.join(__dirname, "/../client/build/")));
 
+  // Use apiRouter to apply common middleware across all the api routes
+  const apiRouter = express.Router();
+  apiRouter.use(passport.authenticate("jwt"));
+  apiRouter.use(getUserInfo);
+  apiRouter.use(requireVoting);
+
   // Returns list of all current polls
-  app.get("/api/getCurrentPolls", passport.authenticate("jwt"), (req, res) => {
-    https.get(
-      {
-        hostname: "sso.csh.rit.edu",
-        path: "/auth/realms/csh/protocol/openid-connect/userinfo",
-        headers: { Authorization: req.headers.authorization },
-      },
-      (infoRes) => {
-        infoRes.setEncoding("utf8");
-        infoRes.on("data", function (chunk) {
-          const groups = JSON.parse(chunk).groups;
-          if (!groups.includes("active")) {
-            res.status(403).send();
-          } else if (
-            groups.includes("10weeks") ||
-            groups.includes("fall_coop")
-          ) {
-            res.status(403).send();
-          } else {
-            res.json(currentPolls);
-          }
-        });
-      }
-    );
+  apiRouter.get("/getCurrentPolls", (req, res) => {
+    res.json(currentPolls);
   });
 
-  app.post("/api/getPollDetails", passport.authenticate("jwt"), (req, res) => {
+  apiRouter.post("/getPollDetails", (req, res) => {
     const poll = currentPolls.find((x) => x._id === req.body.voteId);
-    https.get(
-      {
-        hostname: "sso.csh.rit.edu",
-        path: "/auth/realms/csh/protocol/openid-connect/userinfo",
-        headers: { Authorization: req.headers.authorization },
-      },
-      (infoRes) => {
-        infoRes.setEncoding("utf8");
-        infoRes.on("data", function (chunk) {
-          const groups = JSON.parse(chunk).groups;
-          if (!groups.includes("active")) {
-            res.status(403).send();
-          } else if (
-            groups.includes("10weeks") ||
-            groups.includes("fall_coop")
-          ) {
-            res.status(403).send();
-          } else {
-            if (poll) {
-              res.json(poll);
-            } else {
-              res.status(404).send();
-            }
-          }
-        });
-      }
-    );
+    if (poll) {
+      res.json(poll);
+    } else {
+      res.status(404).send();
+    }
   });
 
   // Send in a client's vote, called from any voting screen
-  app.post("/api/sendVote", passport.authenticate("jwt"), (req, res) => {
-    https.get(
-      {
-        hostname: "sso.csh.rit.edu",
-        path: "/auth/realms/csh/protocol/openid-connect/userinfo",
-        headers: { Authorization: req.headers.authorization },
-      },
-      (infoRes) => {
-        infoRes.setEncoding("utf8");
-        infoRes.on("data", function (chunk) {
-          const groups = JSON.parse(chunk).groups;
-          if (!groups.includes("active")) {
-            res.status(403).send();
-          } else if (
-            groups.includes("10weeks") ||
-            groups.includes("fall_coop")
-          ) {
-            res.status(403).send();
-          } else {
-            const vote = {
-              time: new Date(),
-              userName: JSON.parse(chunk).preferred_username,
-              choice: req.body.voteChoice,
-              poll: ObjectID.createFromHexString(req.body.voteId),
-            };
-            const findData = {
-              userName: vote.userName,
-              poll: vote.poll,
-            };
+  apiRouter.post("/sendVote", (req, res) => {
+    const vote = {
+      time: new Date(),
+      userName: res.locals.userName,
+      choice: req.body.voteChoice,
+      poll: ObjectID.createFromHexString(req.body.voteId),
+    };
+    const findData = {
+      userName: vote.userName,
+      poll: vote.poll,
+    };
 
-            votes_collection.findOne(findData).then((hasVoted) => {
-              if (hasVoted) {
-                res.status(400).send();
-              } else {
-                votes_collection.insert(vote, function (err, docsInserted) {
-                  res.status(204).send();
-                });
-              }
-            });
-          }
+    votes_collection.findOne(findData).then((hasVoted) => {
+      if (hasVoted) {
+        res.status(400).send();
+      } else {
+        votes_collection.insert(vote, function (err, docsInserted) {
+          res.status(204).send();
         });
       }
-    );
+    });
   });
 
   // Initialize a poll/vote, called from eval's init screen
-  app.post("/api/initializePoll", passport.authenticate("jwt"), (req, res) => {
-    https.get(
-      {
-        hostname: "sso.csh.rit.edu",
-        path: "/auth/realms/csh/protocol/openid-connect/userinfo",
-        headers: { Authorization: req.headers.authorization },
-      },
-      (infoRes) => {
-        infoRes.setEncoding("utf8");
-        infoRes.on("data", function (chunk) {
-          const groups = JSON.parse(chunk).groups;
-          if (!groups.includes("eboard-evaluations")) {
-            res.status(403).send();
-          } else {
-            const newPoll = {
-              _id: null,
-              title: req.body.title,
-              choices: req.body.options,
-              type: req.body.type,
-              time: new Date(),
-            };
-            polls_collection.insert(newPoll, function (err, docsInserted) {
-              newPoll._id = newPoll._id.toHexString();
-              currentPolls.push(newPoll);
-              res.json({ pollId: newPoll._id });
-            });
-          }
-        });
-      }
-    );
+  apiRouter.post("/initializePoll", requireEvals, (req, res) => {
+    const newPoll = {
+      _id: null,
+      title: req.body.title,
+      choices: req.body.options,
+      type: req.body.type,
+      time: new Date(),
+    };
+    polls_collection.insert(newPoll, function (err, docsInserted) {
+      newPoll._id = newPoll._id.toHexString();
+      currentPolls.push(newPoll);
+      res.json({ pollId: newPoll._id });
+    });
   });
 
   // get the count without ending the poll
-  app.post("/api/getCount", passport.authenticate("jwt"), (req, res) => {
-    https.get(
-      {
-        hostname: "sso.csh.rit.edu",
-        path: "/auth/realms/csh/protocol/openid-connect/userinfo",
-        headers: { Authorization: req.headers.authorization },
-      },
-      (infoRes) => {
-        infoRes.setEncoding("utf8");
-        infoRes.on("data", function (chunk) {
-          const groups = JSON.parse(chunk).groups;
-          if (!groups.includes("active")) {
-            res.status(403).send();
-          } else if (
-            groups.includes("10weeks") ||
-            groups.includes("fall_coop")
-          ) {
-            res.status(403).send();
+  apiRouter.post("/getCount", (req, res) => {
+    const count = { name: "", results: {} };
+    polls_collection
+      .findOne({ _id: ObjectID.createFromHexString(req.body.voteId) })
+      .then((poll) => {
+        count.name = poll.title;
+      });
+    votes_collection
+      .find({ poll: ObjectID.createFromHexString(req.body.voteId) })
+      .toArray(function (err, result) {
+        if (err) throw err;
+        result.forEach((element) => {
+          const choice = element.choice;
+          if (count.results[choice]) {
+            count.results[choice] += 1;
           } else {
-            const count = { name: "", results: {} };
-            polls_collection
-              .findOne({ _id: ObjectID.createFromHexString(req.body.voteId) })
-              .then((poll) => {
-                count.name = poll.title;
-              });
-            votes_collection
-              .find({ poll: ObjectID.createFromHexString(req.body.voteId) })
-              .toArray(function (err, result) {
-                if (err) throw err;
-                result.forEach((element) => {
-                  const choice = element.choice;
-                  if (count.results[choice]) {
-                    count.results[choice] += 1;
-                  } else {
-                    count.results[choice] = 1;
-                  }
-                });
-                res.json(count);
-              });
+            count.results[choice] = 1;
           }
         });
-      }
-    );
+        res.json(count);
+      });
   });
 
   // end the poll and get the final results, called from evals view
-  app.post("/api/endPoll", passport.authenticate("jwt"), (req, res) => {
-    https.get(
-      {
-        hostname: "sso.csh.rit.edu",
-        path: "/auth/realms/csh/protocol/openid-connect/userinfo",
-        headers: { Authorization: req.headers.authorization },
-      },
-      (infoRes) => {
-        infoRes.setEncoding("utf8");
-        infoRes.on("data", function (chunk) {
-          const groups = JSON.parse(chunk).groups;
-          if (!groups.includes("eboard-evaluations")) {
-            res.status(403).send();
-          } else {
-            let removeIndex = currentPolls
-              .map((item) => item._id)
-              .indexOf(req.body.voteId);
-            ~removeIndex && currentPolls.splice(removeIndex, 1);
+  apiRouter.post("/endPoll", requireEvals, (req, res) => {
+    let removeIndex = currentPolls
+      .map((item) => item._id)
+      .indexOf(req.body.voteId);
+    ~removeIndex && currentPolls.splice(removeIndex, 1);
 
-            const count = { name: "", results: {} };
-            polls_collection
-              .findOne({ _id: ObjectID.createFromHexString(req.body.voteId) })
-              .then((poll) => {
-                count.name = poll.title;
-              });
-            votes_collection
-              .find({ poll: ObjectID.createFromHexString(req.body.voteId) })
-              .toArray(function (err, result) {
-                if (err) throw err;
-                result.forEach((element) => {
-                  const choice = element.choice;
-                  if (count.results[choice]) {
-                    count.results[choice] += 1;
-                  } else {
-                    count.results[choice] = 1;
-                  }
-                });
-                res.json(count);
-              });
+    const count = { name: "", results: {} };
+    polls_collection
+      .findOne({ _id: ObjectID.createFromHexString(req.body.voteId) })
+      .then((poll) => {
+        count.name = poll.title;
+      });
+    votes_collection
+      .find({ poll: ObjectID.createFromHexString(req.body.voteId) })
+      .toArray(function (err, result) {
+        if (err) throw err;
+        result.forEach((element) => {
+          const choice = element.choice;
+          if (count.results[choice]) {
+            count.results[choice] += 1;
+          } else {
+            count.results[choice] = 1;
           }
         });
-      }
-    );
+        res.json(count);
+      });
   });
+
+  app.use("/api", apiRouter);
 
   app.get("*", (req, res) => {
     res.sendFile(path.join(__dirname + "/../client/build/index.html"));
