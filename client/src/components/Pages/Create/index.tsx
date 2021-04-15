@@ -13,23 +13,41 @@ export const Create: React.FunctionComponent = () =>{
     const { oidcUser } = useReactOidc();
     const evals = oidcUser.profile.groups.includes("eboard-evaluations");
 
+    // List of poll types with custom options
+    const customPolls = ["Conditional", "EboardOnly"];
+
+    // Mapping of pollType to the display string and options
+    const pollTypes: Record<string, {body: string, options: string[]}> = {
+        "PassFail": {body: "Pass / Fail", options: ["Pass", "Fail or Conditional", "Abstain"]},
+        "FailConditional": { body: "Fail / Conditional", options: ["Conditional", "Fail", "Abstain"]},
+        "Conditional": { body: "Conditional Poll", options: [""]},
+        "MajorProject": { body: "Major Project", options: ["Pass", "Fail", "Abstain"]},
+        "EboardOnly": { body: "Eboard Only Poll", options: [""]},
+    }
+
+
     let history = useHistory();
 
     function handleSelectPollType(changeEvent:React.FormEvent<HTMLInputElement>) {
         setPollType(changeEvent.currentTarget.value);
-        switch(changeEvent.currentTarget.value) {
-            case "PassFail":
-                setPollOptions(["Pass", "Fail or Conditional", "Abstain"])
-                break;
-            case "FailConditional":
-                setPollOptions(["Conditional", "Fail", "Abstain"])
-                break;
-            case "Conditional":
-                setPollOptions([""])
-                break;
-            default:
-        }
+        setPollOptions(pollTypes[changeEvent.currentTarget.value].options)
     }
+
+    function PollOption(props: {pollType: string, body: string}) {
+        return (
+            <div className="radio">
+              <label>
+                <input type="radio" value={props.pollType} onChange={handleSelectPollType} checked={pollType===props.pollType} />
+                {props.body}
+              </label>
+            </div>
+        )
+    }
+
+    // array of PollOptions for each pollType
+    const pollOptionsThings = Object.keys(pollTypes).map((pollType) =>
+        <PollOption pollType={pollType} body={pollTypes[pollType].body}/>
+    );
 
     function handleChangePollTitle(changeEvent:React.FormEvent<HTMLInputElement>) {
         setPollTitle(changeEvent.currentTarget.value);
@@ -82,7 +100,7 @@ export const Create: React.FunctionComponent = () =>{
                 setLoading(false);
                 setError(true);
               });
-        } 
+        }
 
   return(
     loading ? <Spinner className="vote"></Spinner> :
@@ -97,26 +115,9 @@ export const Create: React.FunctionComponent = () =>{
         </form>
         <form className="type-form">
             <label>Type:</label>
-        <div className="radio">
-          <label>
-            <input type="radio" value="PassFail" onChange={handleSelectPollType} checked={pollType==="PassFail"} />
-            Pass / Fail
-          </label>
-        </div>
-        <div className="radio">
-          <label>
-            <input type="radio" value="FailConditional" onChange={handleSelectPollType} checked={pollType==="FailConditional"}/>
-            Fail / Conditional
-          </label>
-        </div>
-        <div className="radio">
-          <label>
-            <input type="radio" value="Conditional" onChange={handleSelectPollType} checked={pollType==="Conditional"}/>
-            Conditional Poll
-          </label>
-        </div>
-      </form>
-      {pollType === "Conditional" ? <div>
+            {pollOptionsThings}
+        </form>
+      {customPolls.includes(pollType) ? <div>
         <form>
             <label>Enter Options:</label>
         {pollOptions.map(function(option, idx){
