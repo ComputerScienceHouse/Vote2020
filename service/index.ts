@@ -127,12 +127,26 @@ MongoClient.connect(process.env.DB_URL, function (err, client) {
       choice: req.body.voteChoice,
       poll: ObjectID.createFromHexString(req.body.voteId),
     };
-    const findData = {
+
+    const findVote = {
       userName: vote.userName,
       poll: vote.poll,
     };
 
-    votes_collection.findOne(findData).then((hasVoted) => {
+    polls_collection.findOne({ id: vote.poll }).then((poll) => {
+      if (!poll) {
+        res.status(404).send();
+      }
+
+      if (
+        ["EboardOnly", "MajorProject"].includes(poll.type) &&
+        !res.locals.isEboard
+      ) {
+        res.status(403).send();
+      }
+    });
+
+    votes_collection.findOne(findVote).then((hasVoted) => {
       if (hasVoted) {
         res.status(400).send();
       } else {

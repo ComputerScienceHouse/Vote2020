@@ -11,6 +11,7 @@ import { get } from "https";
  * Data added:
  * * res.locals.groups: [string] // User groups
  * * res.locals.userName: string // username/uid
+ * * res.locals.isEboard: booleean
  */
 export function getUserInfo(
   req: Request,
@@ -28,6 +29,9 @@ export function getUserInfo(
       infoRes.on("data", function (chunk) {
         res.locals.groups = JSON.parse(chunk).groups;
         res.locals.userName = JSON.parse(chunk).preferred_username;
+        res.locals.isEboard = res.locals.groups.some((group) =>
+          group.includes("eboard-")
+        );
         next();
       });
     }
