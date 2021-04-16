@@ -20,6 +20,13 @@ MongoClient.connect(process.env.DB_URL, function (err, client) {
   const polls_collection = db.collection(`${coll_prefix}Polls`);
   const votes_collection = db.collection(`${coll_prefix}Votes`);
 
+  // Logging to clarify what collections are being accessed
+  if (coll_prefix === "") {
+    console.log("Using prod db collections");
+  } else {
+    console.log(`Using collections with prefix '${coll_prefix}'`);
+  }
+
   const passport = require("passport");
 
   const https = require("https");
