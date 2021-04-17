@@ -2,12 +2,23 @@ import * as express from "express";
 import * as path from "path";
 import * as cors from "cors";
 import * as dotenv from "dotenv";
+import { MongoClient, ObjectID } from "mongodb";
+import * as passport from "passport";
+import { ExtractJwt, Strategy as JwtStrategy } from "passport-jwt";
+import * as https from "https";
+import * as url from "url";
 
 import { getUserInfo, requireVoting, requireEvals } from "./middleware";
 
-var MongoClient = require("mongodb").MongoClient;
+declare let process: {
+  env: {
+    NODE_ENV: string;
+    DB_URL: string;
+    PORT: number;
+  };
+};
 
-var ObjectID = require("mongodb").ObjectID;
+declare let __dirname;
 
 dotenv.config();
 
@@ -16,24 +27,16 @@ MongoClient.connect(process.env.DB_URL, function (err, client) {
   const db = client.db("vote");
 
   // Only use the prod collections if we're set for production
-  const coll_prefix = process.env.NODE_ENV === "production" ? "" : "dev-";
-  const polls_collection = db.collection(`${coll_prefix}Polls`);
-  const votes_collection = db.collection(`${coll_prefix}Votes`);
+  const collPrefix = process.env.NODE_ENV === "production" ? "" : "dev-";
+  const pollsCollection = db.collection(`${collPrefix}Polls`);
+  const votesCollection = db.collection(`${collPrefix}Votes`);
 
   // Logging to clarify what collections are being accessed
-  if (coll_prefix === "") {
+  if (collPrefix === "") {
     console.log("Using prod db collections");
   } else {
-    console.log(`Using collections with prefix '${coll_prefix}'`);
+    console.log(`Using collections with prefix '${collPrefix}'`);
   }
-
-  const passport = require("passport");
-
-  const https = require("https");
-  var url = require("url");
-
-  var JwtStrategy = require("passport-jwt").Strategy,
-    ExtractJwt = require("passport-jwt").ExtractJwt;
 
   const options = {
     hostname: "sso.csh.rit.edu",
@@ -43,11 +46,11 @@ MongoClient.connect(process.env.DB_URL, function (err, client) {
   https.get(options, (res) => {
     res.setEncoding("utf8");
     res.on("data", function (chunk) {
-      const jwks_uri = JSON.parse(chunk).jwks_uri;
+      const jwksUri = JSON.parse(chunk).jwks_uri;
       https.get(
         {
-          hostname: url.parse(jwks_uri).hostname,
-          path: url.parse(jwks_uri).pathname,
+          hostname: url.parse(jwksUri).hostname,
+          path: url.parse(jwksUri).pathname,
         },
         (res) => {
           res.setEncoding("utf8");
@@ -55,14 +58,14 @@ MongoClient.connect(process.env.DB_URL, function (err, client) {
             let secretOrKey = JSON.parse(chunk).keys[0].x5c[0];
             secretOrKey = secretOrKey.match(/.{1,64}/g).join("\n");
             secretOrKey = `-----BEGIN CERTIFICATE-----\n${secretOrKey}\n-----END CERTIFICATE-----\n`;
-            var opts = {
+            const opts = {
               jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
               secretOrKey: secretOrKey,
               issuer: "https://sso.csh.rit.edu/auth/realms/csh",
             };
             passport.use(
-              new JwtStrategy(opts, function (jwt_payload, done) {
-                return done(null, jwt_payload);
+              new JwtStrategy(opts, function (jwtPayload, done) {
+                return done(null, jwtPayload);
               })
             );
           });
@@ -88,7 +91,7 @@ MongoClient.connect(process.env.DB_URL, function (err, client) {
   app.use(express.static(path.join(__dirname, "/../build")));
   app.use(cors());
 
-  let currentPolls = [
+  const currentPolls = [
     {
       title: "test Poll",
       choices: ["Fail", "Conditional", "Abstain"],
@@ -133,7 +136,7 @@ MongoClient.connect(process.env.DB_URL, function (err, client) {
       poll: vote.poll,
     };
 
-    polls_collection.findOne({ id: vote.poll }).then((poll) => {
+    pollsCollection.findOne({ id: vote.poll }).then((poll) => {
       if (!poll) {
         res.status(404).send();
       }
@@ -146,11 +149,15 @@ MongoClient.connect(process.env.DB_URL, function (err, client) {
       }
     });
 
-    votes_collection.findOne(findVote).then((hasVoted) => {
+    votesCollection.findOne(findVote).then((hasVoted) => {
       if (hasVoted) {
         res.status(400).send();
       } else {
-        votes_collection.insert(vote, function (err, docsInserted) {
+        votesCollection.insert(vote, function (err) {
+          if (err) {
+            console.error(err);
+            res.status(500).send();
+          }
           res.status(204).send();
         });
       }
@@ -166,7 +173,12 @@ MongoClient.connect(process.env.DB_URL, function (err, client) {
       type: req.body.type,
       time: new Date(),
     };
-    polls_collection.insert(newPoll, function (err, docsInserted) {
+    pollsCollection.insert(newPoll, function (err, docsInserted) {
+      if (err) {
+        console.log(err);
+        res.status(500).send();
+      }
+      console.log(`Poll inserted: ${docsInserted}`);
       newPoll._id = newPoll._id.toHexString();
       currentPolls.push(newPoll);
       res.json({ pollId: newPoll._id });
@@ -176,12 +188,12 @@ MongoClient.connect(process.env.DB_URL, function (err, client) {
   // get the count without ending the poll
   apiRouter.post("/getCount", (req, res) => {
     const count = { name: "", results: {} };
-    polls_collection
+    pollsCollection
       .findOne({ _id: ObjectID.createFromHexString(req.body.voteId) })
       .then((poll) => {
         count.name = poll.title;
       });
-    votes_collection
+    votesCollection
       .find({ poll: ObjectID.createFromHexString(req.body.voteId) })
       .toArray(function (err, result) {
         if (err) throw err;
@@ -199,18 +211,18 @@ MongoClient.connect(process.env.DB_URL, function (err, client) {
 
   // end the poll and get the final results, called from evals view
   apiRouter.post("/endPoll", requireEvals, (req, res) => {
-    let removeIndex = currentPolls
+    const removeIndex = currentPolls
       .map((item) => item._id)
       .indexOf(req.body.voteId);
     ~removeIndex && currentPolls.splice(removeIndex, 1);
 
     const count = { name: "", results: {} };
-    polls_collection
+    pollsCollection
       .findOne({ _id: ObjectID.createFromHexString(req.body.voteId) })
       .then((poll) => {
         count.name = poll.title;
       });
-    votes_collection
+    votesCollection
       .find({ poll: ObjectID.createFromHexString(req.body.voteId) })
       .toArray(function (err, result) {
         if (err) throw err;
