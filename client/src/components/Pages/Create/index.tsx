@@ -4,6 +4,9 @@ import Spinner from "../../Spinner";
 import "./create.css";
 import { useReactOidc } from "@axa-fr/react-oidc-context";
 
+
+type PollType = {body: string, options: string[]};
+
 export const Create: React.FunctionComponent = () =>{
     const [pollType, setPollType] = useState("PassFail");
     const [pollTitle, setPollTitle] = useState("");
@@ -17,7 +20,7 @@ export const Create: React.FunctionComponent = () =>{
     const customPolls = ["Conditional", "EboardOnly"];
 
     // Mapping of pollType to the display string and options
-    const pollTypes: Record<string, {body: string, options: string[]}> = {
+    const pollTypes: Record<string, PollType> = {
         "PassFail": {body: "Pass / Fail", options: ["Pass", "Fail or Conditional", "Abstain"]},
         "FailConditional": { body: "Fail / Conditional", options: ["Conditional", "Fail", "Abstain"]},
         "Conditional": { body: "Conditional Poll", options: [""]},
@@ -28,30 +31,52 @@ export const Create: React.FunctionComponent = () =>{
 
     let history = useHistory();
 
+    function handleChangePollTitle(changeEvent:React.FormEvent<HTMLInputElement>) {
+        setPollTitle(changeEvent.currentTarget.value);
+    }
+
     function handleSelectPollType(changeEvent:React.FormEvent<HTMLInputElement>) {
         setPollType(changeEvent.currentTarget.value);
         setPollOptions(pollTypes[changeEvent.currentTarget.value].options)
     }
 
-    function PollOption(props: {pollType: string, body: string}) {
+    // The poll title form. This isn't a component function to avoid issues
+    // with rerendering while typing
+    const PollTitleForm = (
+      <form>
+        <label>Title:</label>
+        <input className="title-input" type="text" onChange={handleChangePollTitle} placeholder="Vote Title"></input>
+      </form>
+    )
+
+
+    function PollTypeForm(props: {pollTypes: Record<string, PollType>}) {
+        return (
+            <form className="type-form">
+                <label>Type:</label>
+                 {Object.keys(props.pollTypes).map((typeName) =>
+                    <RadioButton key={typeName} value={typeName} body={props.pollTypes[typeName].body} changeFunc={handleSelectPollType} checkedFunc={() => pollType===typeName}/>
+                )}
+            </form>
+        )
+    }
+
+    function RadioButton(props: {
+        value: string,
+        body: string,
+        changeFunc: (event: React.FormEvent<HTMLInputElement>) => void,
+        checkedFunc: () => boolean,
+    }) {
         return (
             <div className="radio">
               <label>
-                <input type="radio" value={props.pollType} onChange={handleSelectPollType} checked={pollType===props.pollType} />
+                <input type="radio" value={props.value} onChange={props.changeFunc} checked={props.checkedFunc()} />
                 {props.body}
               </label>
             </div>
         )
     }
 
-    // array of PollOptions for each pollType
-    const pollOptionsThings = Object.keys(pollTypes).map((pollType) =>
-        <PollOption pollType={pollType} body={pollTypes[pollType].body}/>
-    );
-
-    function handleChangePollTitle(changeEvent:React.FormEvent<HTMLInputElement>) {
-        setPollTitle(changeEvent.currentTarget.value);
-    }
     function handleChangeOption(changeEvent:React.FormEvent<HTMLInputElement>, idx:number) {
         const newPollOptions = [...pollOptions]
         newPollOptions[idx] = changeEvent.currentTarget.value;
@@ -109,14 +134,8 @@ export const Create: React.FunctionComponent = () =>{
         <div className="create-poll-box">
         <div className="create-poll-title-panel">Create Vote</div>
         <div className="poll-creation-items">
-        <form>
-            <label>Title:</label>
-            <input className="title-input" type="text" onChange={handleChangePollTitle} placeholder="Vote Title"></input>
-        </form>
-        <form className="type-form">
-            <label>Type:</label>
-            {pollOptionsThings}
-        </form>
+        {PollTitleForm}
+        <PollTypeForm pollTypes={pollTypes}/>
       {customPolls.includes(pollType) ? <div>
         <form>
             <label>Enter Options:</label>
