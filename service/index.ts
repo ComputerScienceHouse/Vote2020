@@ -20,6 +20,8 @@ declare let process: {
 
 declare let __dirname;
 
+type NextFunc = () => void;
+
 dotenv.config();
 
 MongoClient.connect(process.env.DB_URL, function (err, client) {
@@ -123,67 +125,80 @@ MongoClient.connect(process.env.DB_URL, function (err, client) {
   });
 
   // Send in a client's vote, called from any voting screen
-  apiRouter.post("/sendVote", (req, res) => {
-    const vote = {
-      time: new Date(),
-      userName: res.locals.userName,
-      choice: req.body.voteChoice,
-      poll: ObjectID.createFromHexString(req.body.voteId),
-    };
+  apiRouter.post(
+    "/sendVote",
+    (req, res, next: NextFunc) => {
+      // Check there's a poll, and this user can vote on it
+      res.locals.poll = ObjectID.createFromHexString(req.body.voteId);
 
-    const findVote = {
-      userName: vote.userName,
-      poll: vote.poll,
-    };
+      pollsCollection.findOne({ _id: res.locals.poll }).then((poll) => {
+        if (!poll) {
+          res.status(404).send();
+          next();
+        } else if (
+          ["EboardOnly", "MajorProject"].includes(poll.type) &&
+          !res.locals.isEboard
+        ) {
+          res.status(403).send();
+        } else {
+          // Only continue if the user can vote on this poll
+          next();
+        }
+      });
+    },
+    (req, res) => {
+      // Submit the vote
+      const vote = {
+        time: new Date(),
+        userName: res.locals.userName,
+        choice: req.body.voteChoice,
+        poll: res.locals.poll,
+      };
 
-    pollsCollection.findOne({ id: vote.poll }).then((poll) => {
-      if (!poll) {
-        res.status(404).send();
-      }
-
-      if (
-        ["EboardOnly", "MajorProject"].includes(poll.type) &&
-        !res.locals.isEboard
-      ) {
-        res.status(403).send();
-      }
-    });
-
-    votesCollection.findOne(findVote).then((hasVoted) => {
-      if (hasVoted) {
-        res.status(400).send();
-      } else {
-        votesCollection.insert(vote, function (err) {
-          if (err) {
-            console.error(err);
-            res.status(500).send();
+      votesCollection
+        .findOne({ userName: vote.userName, poll: vote.poll })
+        .then((hasVoted) => {
+          if (hasVoted) {
+            res.status(400).send();
+          } else {
+            votesCollection.insert(vote, function (err) {
+              if (err) {
+                console.error(err);
+                res.status(500).send();
+              } else {
+                res.status(204).send();
+              }
+            });
           }
-          res.status(204).send();
         });
-      }
-    });
-  });
+    }
+  );
 
   // Initialize a poll/vote, called from eval's init screen
-  apiRouter.post("/initializePoll", requireEvals, (req, res) => {
-    const newPoll = {
-      _id: null,
-      title: req.body.title,
-      choices: req.body.options,
-      type: req.body.type,
-      time: new Date(),
-    };
-    pollsCollection.insert(newPoll, function (err, docsInserted) {
-      if (err) {
-        console.log(err);
-        res.status(500).send();
-      }
-      console.log(`Poll inserted: ${docsInserted}`);
-      newPoll._id = newPoll._id.toHexString();
-      currentPolls.push(newPoll);
-      res.json({ pollId: newPoll._id });
-    });
-  });
+  apiRouter.post(
+    "/initializePoll",
+    requireEvals,
+    (req, res, next: NextFunc) => {
+      const newPoll = {
+        _id: null,
+        title: req.body.title,
+        choices: req.body.options,
+        type: req.body.type,
+        time: new Date(),
+      };
+      pollsCollection.insert(newPoll, function (err, docsInserted) {
+        if (err) {
+          console.log(err);
+          res.status(500).send();
+          next();
+        }
+        console.log(`Poll inserted: ${docsInserted}`);
+        newPoll._id = newPoll._id.toHexString();
+        currentPolls.push(newPoll);
+        res.json({ pollId: newPoll._id });
+      });
+    }
+  );
 
   // get the count without ending the poll
   apiRouter.post("/getCount", (req, res) => {
