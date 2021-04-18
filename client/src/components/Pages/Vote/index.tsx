@@ -14,6 +14,10 @@ type Poll = {
   type: string,
 }
 
+class AuthError extends Error {
+    public readonly name: string = "AuthError";
+}
+
 export const Vote: React.FunctionComponent = () =>{
   const { voteId } = useParams<RouteParams>();
   const [poll, setPoll] = useState<Poll|undefined>(undefined);
@@ -67,16 +71,21 @@ export const Vote: React.FunctionComponent = () =>{
               .then((res) => {
                 switch(res.status) {
                   case 204:
-                      history.push("/result/" + voteId)
                       return;
+                  case 403:
+                    throw new AuthError("Unauthorized");
                   default:
                     throw new Error("Error Voting");
                 }
               })
               .catch((error) => {
-                window.alert("An error occurred (You may have already voted)")
-                history.push("/result/" + voteId)
-              });
+                if (error instanceof AuthError) {
+                  window.alert(error.message);
+                } else {
+                  window.alert("An error occurred (You may have already voted)");
+                }
+              })
+              .then(() => {history.push("/result/" + voteId)});
         } 
       }
   return(
