@@ -14,14 +14,13 @@ import { useReactOidc } from "@axa-fr/react-oidc-context";
 const NavBar: React.FunctionComponent = () => {
   const [isOpen, setIsOpen] = React.useState<boolean>(false);
 
-  const toggle = () => {
+  const toggle = (): void => {
     setIsOpen(!isOpen);
   };
   const { oidcUser } = useReactOidc();
   let evals = false;
   if (oidcUser) {
     evals = oidcUser.profile.groups.includes("eboard-evaluations");
-
   }
 
   return (
@@ -39,13 +38,13 @@ const NavBar: React.FunctionComponent = () => {
                   Home
                 </NavLink>
               </NavItem>
-              {evals ? 
+              {evals ? (
                 <NavItem>
-                <NavLink to="/create" className={"nav-link"}>
-                  Create
-                </NavLink>
-              </NavItem>
-              : null}
+                  <NavLink to="/create" className={"nav-link"}>
+                    Create
+                  </NavLink>
+                </NavItem>
+              ) : null}
             </Nav>
             <Nav navbar className="ml-auto">
               <Profile />
