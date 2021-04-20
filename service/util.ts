@@ -16,6 +16,18 @@ interface User {
   groups: string[];
 }
 
-function userCanVote(user: User, poll: Poll) {
-  //TODO - add functionality
+/**
+ * Determine whether a user can vote in a poll
+ *
+ * At present, the only restricted polls are EboardOnly and MajorProject
+ */
+function userCanVote(
+  user: Pick<User, "isEboard">,
+  poll: Pick<Poll, "type">
+): boolean {
+  if (["EboardOnly", "MajorProject"].includes(poll.type) && !user.isEboard) {
+    return false;
+  }
+
+  return true;
 }
