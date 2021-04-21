@@ -11,7 +11,7 @@ export interface Poll {
 }
 
 export interface User {
-  username: string;
+  userName: string;
   isEboard: boolean;
   groups: string[];
 }

@@ -28,7 +28,7 @@ export function getUserInfo(
       infoRes.on("data", function (chunk) {
         const groups = JSON.parse(chunk).groups;
         const user: User = {
-          username: JSON.parse(chunk).preferred_username,
+          userName: JSON.parse(chunk).preferred_username,
           isEboard: groups.some((group) => group.includes("eboard-")),
           groups: groups,
         };
