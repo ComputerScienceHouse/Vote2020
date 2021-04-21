@@ -2,7 +2,7 @@
  * This file contains useful utility functions and interfaces for use across the server code
  */
 
-interface Poll {
+export interface Poll {
   title: string;
   choices: string[];
   type: string;
@@ -10,7 +10,7 @@ interface Poll {
   time: Date;
 }
 
-interface User {
+export interface User {
   username: string;
   isEboard: boolean;
   groups: string[];
@@ -21,7 +21,7 @@ interface User {
  *
  * At present, the only restricted polls are EboardOnly and MajorProject
  */
-function userCanVote(
+export function userCanVote(
   user: Pick<User, "isEboard">,
   poll: Pick<Poll, "type">
 ): boolean {

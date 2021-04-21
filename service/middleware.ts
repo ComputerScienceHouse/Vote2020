@@ -5,13 +5,12 @@
 
 import { Request, Response } from "express";
 import { get } from "https";
+import { User } from "./util";
 
 /**
  * A middleware function that adds user info to res.locals
  * Data added:
- * * res.locals.groups: [string] // User groups
- * * res.locals.userName: string // username/uid
- * * res.locals.isEboard: booleean
+ * * res.locals.user: User
  */
 export function getUserInfo(
   req: Request,
@@ -27,11 +26,13 @@ export function getUserInfo(
     (infoRes) => {
       infoRes.setEncoding("utf8");
       infoRes.on("data", function (chunk) {
-        res.locals.groups = JSON.parse(chunk).groups;
-        res.locals.userName = JSON.parse(chunk).preferred_username;
-        res.locals.isEboard = res.locals.groups.some((group) =>
-          group.includes("eboard-")
-        );
+        const groups = JSON.parse(chunk).groups;
+        const user: User = {
+          username: JSON.parse(chunk).preferred_username,
+          isEboard: groups.some((group) => group.includes("eboard-")),
+          groups: groups,
+        };
+        res.locals.user = user;
         next();
       });
     }
@@ -45,14 +46,14 @@ export function requireVoting(
   next: () => void
 ): void {
   // Must be active
-  if (!res.locals.groups.includes("active")) {
+  if (!res.locals.user.groups.includes("active")) {
     res.status(403).send();
   }
 
   // Need to have passed a 10 weeks
   if (
-    res.locals.groups.includes("10weeks") ||
-    res.locals.groups.includes("fall_coop")
+    res.locals.user.groups.includes("10weeks") ||
+    res.locals.user.groups.includes("fall_coop")
   ) {
     res.status(403).send();
   }
@@ -66,7 +67,7 @@ export function requireEvals(
   res: Response,
   next: () => void
 ): void {
-  if (!res.locals.groups.includes("eboard-evaluations")) {
+  if (!res.locals.user.groups.includes("eboard-evaluations")) {
     res.status(403).send();
   }
 
