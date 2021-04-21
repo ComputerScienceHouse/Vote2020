@@ -1,3 +1,4 @@
+/* eslint @typescript-eslint/camelcase: ["error", {allow: ["preferred_username"]}] */
 import { useReactOidc } from "@axa-fr/react-oidc-context";
 import React from "react";
 import {
@@ -9,7 +10,7 @@ import {
 
 const Profile: React.FunctionComponent = () => {
   const { oidcUser, logout } = useReactOidc();
-  
+
   if (!oidcUser) return null;
   const {
     profile: { name, preferred_username },
@@ -33,7 +34,7 @@ const Profile: React.FunctionComponent = () => {
         <DropdownItem>Dashboard</DropdownItem>
         <DropdownItem>Settings</DropdownItem>
         <DropdownItem divider />
-        <DropdownItem onClick={() => logout()}>Logout</DropdownItem>
+        <DropdownItem onClick={(): unknown => logout()}>Logout</DropdownItem>
       </DropdownMenu>
     </UncontrolledDropdown>
   );

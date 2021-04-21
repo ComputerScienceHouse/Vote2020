@@ -2,12 +2,26 @@ import * as express from "express";
 import * as path from "path";
 import * as cors from "cors";
 import * as dotenv from "dotenv";
+import { MongoClient, ObjectID } from "mongodb";
+import * as passport from "passport";
+import { ExtractJwt, Strategy as JwtStrategy } from "passport-jwt";
+import * as https from "https";
+import * as url from "url";
 
 import { getUserInfo, requireVoting, requireEvals } from "./middleware";
+import { Poll, userCanVote } from "./util";
 
-var MongoClient = require("mongodb").MongoClient;
+declare let process: {
+  env: {
+    NODE_ENV: string;
+    DB_URL: string;
+    PORT: number;
+  };
+};
 
-var ObjectID = require("mongodb").ObjectID;
+declare let __dirname;
+
+type NextFunc = () => void;
 
 dotenv.config();
 
@@ -16,17 +30,16 @@ MongoClient.connect(process.env.DB_URL, function (err, client) {
   const db = client.db("vote");
 
   // Only use the prod collections if we're set for production
-  const coll_prefix = process.env.NODE_ENV === "production" ? "" : "dev-";
-  const polls_collection = db.collection(`${coll_prefix}Polls`);
-  const votes_collection = db.collection(`${coll_prefix}Votes`);
+  const collPrefix = process.env.NODE_ENV === "production" ? "" : "dev-";
+  const pollsCollection = db.collection(`${collPrefix}Polls`);
+  const votesCollection = db.collection(`${collPrefix}Votes`);
 
-  const passport = require("passport");
-
-  const https = require("https");
-  var url = require("url");
-
-  var JwtStrategy = require("passport-jwt").Strategy,
-    ExtractJwt = require("passport-jwt").ExtractJwt;
+  // Logging to clarify what collections are being accessed
+  if (collPrefix === "") {
+    console.log("Using prod db collections");
+  } else {
+    console.log(`Using collections with prefix '${collPrefix}'`);
+  }
 
   const options = {
     hostname: "sso.csh.rit.edu",
@@ -36,11 +49,11 @@ MongoClient.connect(process.env.DB_URL, function (err, client) {
   https.get(options, (res) => {
     res.setEncoding("utf8");
     res.on("data", function (chunk) {
-      const jwks_uri = JSON.parse(chunk).jwks_uri;
+      const jwksUri = JSON.parse(chunk).jwks_uri;
       https.get(
         {
-          hostname: url.parse(jwks_uri).hostname,
-          path: url.parse(jwks_uri).pathname,
+          hostname: url.parse(jwksUri).hostname,
+          path: url.parse(jwksUri).pathname,
         },
         (res) => {
           res.setEncoding("utf8");
@@ -48,14 +61,14 @@ MongoClient.connect(process.env.DB_URL, function (err, client) {
             let secretOrKey = JSON.parse(chunk).keys[0].x5c[0];
             secretOrKey = secretOrKey.match(/.{1,64}/g).join("\n");
             secretOrKey = `-----BEGIN CERTIFICATE-----\n${secretOrKey}\n-----END CERTIFICATE-----\n`;
-            var opts = {
+            const opts = {
               jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
               secretOrKey: secretOrKey,
               issuer: "https://sso.csh.rit.edu/auth/realms/csh",
             };
             passport.use(
-              new JwtStrategy(opts, function (jwt_payload, done) {
-                return done(null, jwt_payload);
+              new JwtStrategy(opts, function (jwtPayload, done) {
+                return done(null, jwtPayload);
               })
             );
           });
@@ -81,12 +94,13 @@ MongoClient.connect(process.env.DB_URL, function (err, client) {
   app.use(express.static(path.join(__dirname, "/../build")));
   app.use(cors());
 
-  let currentPolls = [
+  const currentPolls: Poll[] = [
     {
       title: "test Poll",
       choices: ["Fail", "Conditional", "Abstain"],
       type: "FailConditional",
       _id: "5f9b2d5d601e1c6971430638",
+      time: new Date(),
     },
   ];
 
@@ -100,7 +114,14 @@ MongoClient.connect(process.env.DB_URL, function (err, client) {
 
   // Returns list of all current polls
   apiRouter.get("/getCurrentPolls", (req, res) => {
-    res.json(currentPolls);
+    res.json(
+      currentPolls.map((poll: Poll) => {
+        return {
+          ...poll,
+          canVote: userCanVote(res.locals.user, poll),
+        } as Poll & { canVote: boolean };
+      })
+    );
   });
 
   apiRouter.post("/getPollDetails", (req, res) => {
@@ -113,54 +134,91 @@ MongoClient.connect(process.env.DB_URL, function (err, client) {
   });
 
   // Send in a client's vote, called from any voting screen
-  apiRouter.post("/sendVote", (req, res) => {
-    const vote = {
-      time: new Date(),
-      userName: res.locals.userName,
-      choice: req.body.voteChoice,
-      poll: ObjectID.createFromHexString(req.body.voteId),
-    };
-    const findData = {
-      userName: vote.userName,
-      poll: vote.poll,
-    };
+  apiRouter.post(
+    "/sendVote",
+    (req, res, next: NextFunc) => {
+      // Check there's a poll, and this user can vote on it
+      res.locals.pollId = ObjectID.createFromHexString(req.body.voteId);
 
-    votes_collection.findOne(findData).then((hasVoted) => {
-      if (hasVoted) {
-        res.status(400).send();
-      } else {
-        votes_collection.insert(vote, function (err, docsInserted) {
-          res.status(204).send();
+      pollsCollection.findOne({ _id: res.locals.pollId }).then((poll) => {
+        if (!poll) {
+          res.status(404).send();
+          next();
+        } else if (
+          ["EboardOnly", "MajorProject"].includes(poll.type) &&
+          !res.locals.user.isEboard
+        ) {
+          res.status(403).send();
+        } else {
+          // Only continue if the user can vote on this poll
+          next();
+        }
+      });
+    },
+    (req, res) => {
+      // Submit the vote
+      const vote = {
+        time: new Date(),
+        userName: res.locals.user.userName,
+        choice: req.body.voteChoice,
+        poll: res.locals.pollId,
+      };
+
+      votesCollection
+        .findOne({ userName: vote.userName, poll: vote.poll })
+        .then((hasVoted) => {
+          if (hasVoted) {
+            res.status(400).send();
+          } else {
+            votesCollection.insert(vote, function (err) {
+              if (err) {
+                console.error(err);
+                res.status(500).send();
+              } else {
+                res.status(204).send();
+              }
+            });
+          }
         });
-      }
-    });
-  });
+    }
+  );
 
   // Initialize a poll/vote, called from eval's init screen
-  apiRouter.post("/initializePoll", requireEvals, (req, res) => {
-    const newPoll = {
-      _id: null,
-      title: req.body.title,
-      choices: req.body.options,
-      type: req.body.type,
-      time: new Date(),
-    };
-    polls_collection.insert(newPoll, function (err, docsInserted) {
-      newPoll._id = newPoll._id.toHexString();
-      currentPolls.push(newPoll);
-      res.json({ pollId: newPoll._id });
-    });
-  });
+  apiRouter.post(
+    "/initializePoll",
+    requireEvals,
+    (req, res, next: NextFunc) => {
+      let newPoll = {
+        _id: null,
+        title: req.body.title,
+        choices: req.body.options,
+        type: req.body.type,
+        time: new Date(),
+      };
+      pollsCollection.insert(newPoll, function (err, docsInserted) {
+        if (err) {
+          console.log(err);
+          res.status(500).send();
+          next();
+        }
+        console.log(`Poll inserted: ${docsInserted}`);
+        newPoll._id = newPoll._id.toHexString();
+        newPoll = newPoll as Poll;
+        currentPolls.push(newPoll);
+        res.json({ pollId: newPoll._id });
+      });
+    }
+  );
 
   // get the count without ending the poll
   apiRouter.post("/getCount", (req, res) => {
     const count = { name: "", results: {} };
-    polls_collection
+    pollsCollection
       .findOne({ _id: ObjectID.createFromHexString(req.body.voteId) })
       .then((poll) => {
         count.name = poll.title;
       });
-    votes_collection
+    votesCollection
       .find({ poll: ObjectID.createFromHexString(req.body.voteId) })
       .toArray(function (err, result) {
         if (err) throw err;
@@ -178,18 +236,18 @@ MongoClient.connect(process.env.DB_URL, function (err, client) {
 
   // end the poll and get the final results, called from evals view
   apiRouter.post("/endPoll", requireEvals, (req, res) => {
-    let removeIndex = currentPolls
+    const removeIndex = currentPolls
       .map((item) => item._id)
       .indexOf(req.body.voteId);
     ~removeIndex && currentPolls.splice(removeIndex, 1);
 
     const count = { name: "", results: {} };
-    polls_collection
+    pollsCollection
       .findOne({ _id: ObjectID.createFromHexString(req.body.voteId) })
       .then((poll) => {
         count.name = poll.title;
       });
-    votes_collection
+    votesCollection
       .find({ poll: ObjectID.createFromHexString(req.body.voteId) })
       .toArray(function (err, result) {
         if (err) throw err;
