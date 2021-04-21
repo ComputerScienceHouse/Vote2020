@@ -9,6 +9,7 @@ import * as https from "https";
 import * as url from "url";
 
 import { getUserInfo, requireVoting, requireEvals } from "./middleware";
+import { Poll, userCanVote } from "./util";
 
 declare let process: {
   env: {
@@ -93,12 +94,13 @@ MongoClient.connect(process.env.DB_URL, function (err, client) {
   app.use(express.static(path.join(__dirname, "/../build")));
   app.use(cors());
 
-  const currentPolls = [
+  const currentPolls: Poll[] = [
     {
       title: "test Poll",
       choices: ["Fail", "Conditional", "Abstain"],
       type: "FailConditional",
       _id: "5f9b2d5d601e1c6971430638",
+      time: new Date(),
     },
   ];
 
@@ -112,7 +114,14 @@ MongoClient.connect(process.env.DB_URL, function (err, client) {
 
   // Returns list of all current polls
   apiRouter.get("/getCurrentPolls", (req, res) => {
-    res.json(currentPolls);
+    res.json(
+      currentPolls.map((poll: Poll) => {
+        return {
+          ...poll,
+          canVote: userCanVote(res.locals.user, poll),
+        } as Poll & { canVote: boolean };
+      })
+    );
   });
 
   apiRouter.post("/getPollDetails", (req, res) => {
@@ -129,15 +138,15 @@ MongoClient.connect(process.env.DB_URL, function (err, client) {
     "/sendVote",
     (req, res, next: NextFunc) => {
       // Check there's a poll, and this user can vote on it
-      res.locals.poll = ObjectID.createFromHexString(req.body.voteId);
+      res.locals.pollId = ObjectID.createFromHexString(req.body.voteId);
 
-      pollsCollection.findOne({ _id: res.locals.poll }).then((poll) => {
+      pollsCollection.findOne({ _id: res.locals.pollId }).then((poll) => {
         if (!poll) {
           res.status(404).send();
           next();
         } else if (
           ["EboardOnly", "MajorProject"].includes(poll.type) &&
-          !res.locals.isEboard
+          !res.locals.user.isEboard
         ) {
           res.status(403).send();
         } else {
@@ -150,9 +159,9 @@ MongoClient.connect(process.env.DB_URL, function (err, client) {
       // Submit the vote
       const vote = {
         time: new Date(),
-        userName: res.locals.userName,
+        userName: res.locals.user.userName,
         choice: req.body.voteChoice,
-        poll: res.locals.poll,
+        poll: res.locals.pollId,
       };
 
       votesCollection
@@ -179,7 +188,7 @@ MongoClient.connect(process.env.DB_URL, function (err, client) {
     "/initializePoll",
     requireEvals,
     (req, res, next: NextFunc) => {
-      const newPoll = {
+      let newPoll = {
         _id: null,
         title: req.body.title,
         choices: req.body.options,
@@ -194,6 +203,7 @@ MongoClient.connect(process.env.DB_URL, function (err, client) {
         }
         console.log(`Poll inserted: ${docsInserted}`);
         newPoll._id = newPoll._id.toHexString();
+        newPoll = newPoll as Poll;
         currentPolls.push(newPoll);
         res.json({ pollId: newPoll._id });
       });
