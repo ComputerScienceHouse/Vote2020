@@ -25,6 +25,29 @@ class AuthError extends Error {
   public readonly name: string = "AuthError";
 }
 
+const EatAWholeCakeButton: React.FunctionComponent<{ poll: Poll }> = ({
+  poll,
+}: {
+  poll: Poll;
+}) => {
+  if (poll.type === "Conditional") {
+    return (
+      <li key="eatawholecake">
+        <button
+          className="btn btn-primary poll-option-button btn-success"
+          disabled
+        >
+          Eat a whole cake{" "}
+          <span role="img" aria-label="Cake emoji">
+            🎂
+          </span>
+        </button>
+      </li>
+    );
+  }
+  return <></>;
+};
+
 export const Vote: React.FunctionComponent = () => {
   const { voteId } = useParams<RouteParams>();
   const [poll, setPoll] = useState<Poll | undefined>(undefined);
@@ -157,6 +180,7 @@ export const Vote: React.FunctionComponent = () => {
               </li>
             );
           })}
+          <EatAWholeCakeButton poll={poll} />
         </div>
       </div>
       <div>
