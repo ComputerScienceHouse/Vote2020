@@ -3,7 +3,7 @@ kind: Service
 metadata:
   labels:
     app: vote
-  name: vote
+  name: vote-dev
   namespace: vote
 spec:
   ports:
@@ -12,6 +12,6 @@ spec:
     protocol: TCP
     targetPort: 8080
   selector:
-    deploymentconfig: vote
+    deploymentconfig: vote-dev
   sessionAffinity: None
   type: ClusterIP

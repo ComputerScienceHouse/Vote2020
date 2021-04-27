@@ -3,9 +3,6 @@ LABEL maintainer="Max Meinhold <mxmeinhold@gmail.com>"
 
 EXPOSE 8080
 
-ENV NODE_ENV production
-
-RUN mkdir /opt/vote
 WORKDIR /opt/vote
 
 # nvm install deps

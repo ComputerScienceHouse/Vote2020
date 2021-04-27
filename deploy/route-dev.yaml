@@ -17,6 +17,6 @@ spec:
     termination: edge
   to:
     kind: Service
-    name: vote
+    name: vote-dev
     weight: 100
   wildcardPolicy: None
